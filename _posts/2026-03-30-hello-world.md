@@ -1,5 +1,4 @@
 ---
-layout: default
 title: "Hello World: The New Site is Live"
 date: 2026-03-30 10:00:00 +0000
 categories: [news, updates]

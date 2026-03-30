@@ -1,5 +1,4 @@
 ---
-layout: default
 title: "Building a Modular Jekyll Site"
 description: "A technical guide on setting up a modular GitHub Pages site."
 ---
