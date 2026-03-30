@@ -1,0 +1,85 @@
+# ==========================================
+# Site Settings - davidebisio.github.io
+# ==========================================
+
+title: Davide Bisio
+email: your-email@example.com
+description: >- # This is used for SEO meta descriptions
+  Personal website and blog of Davide Bisio. 
+  Focusing on articles, projects, and professional insights.
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://davidebisio.github.io" # the base hostname & protocol for your site
+
+# ==========================================
+# Theme & Layout
+# ==========================================
+
+theme: jekyll-theme-modernist
+remote_theme: pages-themes/modernist@v0.2.0
+
+collections:
+  articles:
+    output: true
+    permalink: /articles/:path/
+
+# Modular Design Settings
+defaults:
+  - scope:
+      path: "" # all files in the project
+    values:
+      layout: "default"
+  - scope:
+      path: "_posts" # all files in the blog folder
+    values:
+      layout: "post"
+      author: "Davide Bisio"
+  - scope:
+      path: "_articles"
+    values:
+      layout: "post" # Reusing the post layout for articles
+
+# ==========================================
+# Navigation (Modular for the Theme)
+# ==========================================
+
+header_pages:
+  - index.md
+  - articles.md
+  - blog.md
+
+# ==========================================
+# SEO & Indexing Features
+# ==========================================
+
+# Plugins to handle sitemap, robots, and Google-friendly metadata
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-feed
+  - jekyll-gist
+
+# SEO Tag Configuration
+twitter:
+  username: davidebisio
+  card: summary
+logo: /assets/img/logo.png # Path to your avatar/logo for search results
+
+# ==========================================
+# Build Settings
+# ==========================================
+
+markdown: kramdown
+highlighter: rouge
+lsi: false
+
+# Exclude these files from the production build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .jekyll-cache
+  - .jekyll-metadata
