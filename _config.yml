@@ -3,3 +3,4 @@ title: "davidebisio"
 show_downloads: false
 # description: [A short description of your site's purpose]
 # google_analytics: [Your Google Analytics tracking ID]
+baseurl: ""
