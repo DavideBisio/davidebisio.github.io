@@ -9,7 +9,7 @@ description: "A collection of technical articles and deep dives by Davide Bisio.
 Here you will find structured content regarding software development, workflow optimization, and technical guides.
 
 ### Featured Articles
-* **[Building a Modular Jekyll Site](/2026/03/30/placeholder-article)** *A deep dive into the architecture of this very website.*
+* **[Building a Modular Jekyll Site](/articles/placeholder-article)** *A deep dive into the architecture of this very website.*
 
 * **Future Article Title** *Coming soon...*
 
