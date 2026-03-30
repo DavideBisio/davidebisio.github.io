@@ -3,7 +3,7 @@
 # ==========================================
 
 title: Davide Bisio
-email: your-email@example.com
+author: Davide Bisio
 description: >- # This is used for SEO meta descriptions
   Personal website and blog of Davide Bisio. 
   Focusing on articles, projects, and professional insights.
@@ -14,7 +14,6 @@ url: "https://davidebisio.github.io" # the base hostname & protocol for your sit
 # Theme & Layout
 # ==========================================
 
-theme: jekyll-theme-modernist
 remote_theme: pages-themes/modernist@v0.2.0
 
 collections:
@@ -30,13 +29,15 @@ defaults:
       layout: "default"
   - scope:
       path: "_posts" # all files in the blog folder
+      type: "posts"
     values:
       layout: "post"
       author: "Davide Bisio"
   - scope:
       path: "_articles"
+      type: "articles"
     values:
-      layout: "post" # Reusing the post layout for articles
+      layout: "post"
 
 # ==========================================
 # Navigation (Modular for the Theme)
@@ -54,9 +55,9 @@ header_pages:
 # Plugins to handle sitemap, robots, and Google-friendly metadata
 plugins:
   - jekyll-seo-tag
-  - jekyll-sitemap
   - jekyll-feed
   - jekyll-gist
+  - jekyll-remote-theme
 
 # SEO Tag Configuration
 twitter:
@@ -71,6 +72,11 @@ logo: /assets/img/logo.png # Path to your avatar/logo for search results
 markdown: kramdown
 highlighter: rouge
 lsi: false
+
+# Suppress upstream Sass @import deprecation warnings from the Modernist theme.
+# Remove once the theme is updated to use @use/@forward.
+sass:
+  quiet_deps: true
 
 # Exclude these files from the production build
 exclude:

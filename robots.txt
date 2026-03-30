@@ -5,8 +5,3 @@ Sitemap: {{ site.url }}/sitemap.xml
 
 User-agent: *
 Allow: /
-
-# Disallow searching internal Jekyll files
-Disallow: /assets/
-Disallow: /_includes/
-Disallow: /_layouts/
