@@ -1,5 +1,7 @@
 # davidebisio.github.io
 
+[About Me](./about.html) | [Blog](./blog.html)
+
 This is readme.md
 
 ### Recent Posts
