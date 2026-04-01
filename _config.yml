@@ -49,6 +49,24 @@ header_pages:
   - blog.md
 
 # ==========================================
+# GitHub Metadata mock (for local development)
+# On GitHub Pages these are injected automatically; locally they are not.
+# Remove or keep this block — it is safely ignored when deployed.
+# ==========================================
+
+github:
+  repository_url: https://github.com/davidebisio/davidebisio.github.io
+  repository_name: davidebisio.github.io
+  owner_url: https://github.com/davidebisio
+  owner_name: davidebisio
+  project_title: Davide Bisio
+  project_tagline: >-
+    Personal website and blog of Davide Bisio.
+    Focusing on articles, projects, and professional insights.
+  zip_url: https://github.com/davidebisio/davidebisio.github.io/archive/refs/heads/main.zip
+  tar_url: https://github.com/davidebisio/davidebisio.github.io/archive/refs/heads/main.tar.gz
+
+# ==========================================
 # SEO & Indexing Features
 # ==========================================
 
