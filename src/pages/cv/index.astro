@@ -5,15 +5,15 @@ import { profile, experience, education, skillsTree } from '../../data/cv';
 ---
 
 <Layout title="CV" description={`CV of ${profile.name}, ${profile.title}.`}>
-  <div class="mb-8 flex items-start justify-between gap-4 print:hidden">
+  <div class="mb-8 flex items-start justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">CV</h1>
-      <p class="text-slate-600 dark:text-slate-400">{profile.name} &middot; {profile.title}</p>
+      <h1 class="text-2xl font-bold tracking-tight">{profile.name}</h1>
+      <p class="text-slate-600 dark:text-slate-400">{profile.title}</p>
     </div>
     <a
       href="/cv.pdf"
       download
-      class="shrink-0 rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700"
+      class="shrink-0 rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700 print:hidden"
     >
       Download PDF
     </a>
