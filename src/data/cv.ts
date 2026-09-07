@@ -42,7 +42,9 @@ export const experience: Experience[] = [
       'Own UVM testbench deployment and UVC development for verification environments.',
       'Drive formal verification of digital designs.',
       'Fault injection specialist, using Siemens Austemper SafetyScope & KaleidoScope for functional safety verification.',
-      'Build analog models for verification, with Python and Git-based tooling.',
+      'Build analog models for digital verification environment integration.',
+      'Develop Python CLI and GUI applications, focused on workflow guideline definition and day-to-day helper tools.',
+      'Experienced Git user.',
     ],
   },
   {
