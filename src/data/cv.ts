@@ -41,7 +41,10 @@ export const experience: Experience[] = [
       'Develop data-processing and intelligent workflow applications that apply AI to verification engineering problems, including a deep dive into Claude Code — building skills, plugins, and automated workflows now part of the team\'s day-to-day practice.',
       'Own UVM testbench deployment and UVC development for verification environments.',
       'Drive formal verification of digital designs.',
-      'Build analog models for verification, with Python and Git-based tooling.',
+      'Fault injection specialist, using Siemens Austemper SafetyScope & KaleidoScope for functional safety verification.',
+      'Build analog models for digital verification environment integration.',
+      'Develop Python CLI and GUI applications, focused on workflow guideline definition and day-to-day helper tools.',
+      'Experienced Git user.',
     ],
   },
   {
@@ -93,6 +96,7 @@ export const skillsTree: SkillNode[] = [
       { name: 'UVC Development', level: 'expert' },
       { name: 'Formal Verification (Jasper Gold)', level: 'expert' },
       { name: 'Assertion-Based Verification (SVA)', level: 'expert' },
+      { name: 'Fault Injection', level: 'expert' },
       { name: 'Functional & Code Coverage', level: 'proficient' },
       { name: 'Low Power Verification (UPF)', level: 'proficient' },
       { name: 'Gate-Level / Post-Layout Simulation', level: 'proficient' },
@@ -103,15 +107,18 @@ export const skillsTree: SkillNode[] = [
     children: [
       { name: 'SystemVerilog', level: 'expert' },
       { name: 'Python', level: 'proficient' },
-      { name: 'MATLAB', level: 'proficient' },
       { name: 'Tcl / AWK', level: 'familiar' },
     ],
   },
   {
     name: 'Tools',
     children: [
-      { name: 'Git', level: 'expert' },
+      { name: 'Cadence JasperGold', level: 'expert' },
       { name: 'Cadence Xcelium / Indago / vManager', level: 'proficient' },
+      { name: 'Siemens Austemper SafetyScope & KaleidoScope (Fault Injection)', level: 'expert' },
+      { name: 'Jama Connect (Jama Software)', level: 'proficient' },
+      { name: 'MATLAB', level: 'proficient' },
+      { name: 'Git', level: 'expert' },
     ],
   },
   {
