@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import { getCollection } from 'astro:content';
+
+const articles = await getCollection('articles', ({ data }) => !data.draft);
+---
+
+<Layout title="Articles" description="Articles about my hobbies and my professional work.">
+  <h1 class="mb-6 text-2xl font-bold tracking-tight">Articles</h1>
+  <ArticleList articles={articles} activeCategory={null} />
+</Layout>
