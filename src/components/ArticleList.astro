@@ -1,0 +1,34 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articleSlug } from '../lib/articles';
+
+interface Props {
+  articles: CollectionEntry<'articles'>[];
+  basePath: '/articles/' | '/interests/';
+}
+
+const { articles, basePath } = Astro.props;
+
+const sorted = [...articles].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+{sorted.length === 0 && <p class="text-slate-500 dark:text-slate-400">Nothing published yet — check back soon.</p>}
+
+<ul class="space-y-6">
+  {
+    sorted.map((article) => (
+      <li>
+        <a href={`${basePath}${articleSlug(article)}/`} class="group block">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+            <p class="font-medium group-hover:text-sky-600 dark:group-hover:text-sky-400">{article.data.title}</p>
+            <time datetime={article.data.pubDate.toISOString()} class="shrink-0 text-sm text-slate-500 dark:text-slate-400">
+              {dateFormatter.format(article.data.pubDate)}
+            </time>
+          </div>
+          <p class="text-sm text-slate-600 dark:text-slate-400">{article.data.description}</p>
+        </a>
+      </li>
+    ))
+  }
+</ul>
