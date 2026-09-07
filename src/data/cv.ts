@@ -27,21 +27,21 @@ export const profile = {
   location: 'Italy',
   email: 'davide.bisio92@gmail.com',
   summary:
-    'Digital verification engineer with a background in UVM testbench development, formal verification, and analog/DSP modeling for mixed-signal designs. Currently applying the same rigor to integrating AI tooling — Claude Code skills, plugins, and automated workflows — into engineering practice.',
+    'Digital verification engineer with 8+ years of experience in UVM testbench development, formal verification, and analog/DSP modeling for mixed-signal designs. Increasingly focused on applying AI to verification engineering — building data-processing and workflow tooling around Claude Code.',
   links: [{ label: 'GitHub', url: 'https://github.com/davidebisio' }],
 };
 
 export const experience: Experience[] = [
   {
-    role: 'Sr Digital Verification Engineer',
+    role: 'Senior Digital Verification Engineer',
     company: 'Allegro MicroSystems Europe Ltd.',
-    start: 'Oct 2023',
+    start: '2023',
     end: 'Present',
     highlights: [
-      'UVM testbench deployment and UVC development for verification environments.',
-      'Formal verification of digital designs.',
-      'Analog modeling for verification, with Python and Git-based tooling.',
-      'AI solutions: deep dive into Claude Code — developing skills, plugins, and automated workflows integrated into the engineering process; integrating AI into applications.',
+      'Develop data-processing and intelligent workflow applications that apply AI to verification engineering problems, including a deep dive into Claude Code — building skills, plugins, and automated workflows now part of the team\'s day-to-day practice.',
+      'Own UVM testbench deployment and UVC development for verification environments.',
+      'Drive formal verification of digital designs.',
+      'Build analog models for verification, with Python and Git-based tooling.',
     ],
   },
   {
@@ -49,11 +49,11 @@ export const experience: Experience[] = [
     company: 'STMicroelectronics',
     location: 'Milan',
     start: '2018',
-    end: 'Oct 2023',
+    end: '2023',
     highlights: [
-      'In charge of introducing new verification methodologies and assessing/improving verification workflow.',
-      'DSP modeling and assertion-based verification (SVA).',
-      'Reference point for verification practices within the team.',
+      'Delivered real-time DSP modeling and assertion-based (SVA) verification for dynamic simulations of randomized configuration changes in mixed-signal designs.',
+      'Implemented updated UVM specifications to optimize testbenches and enhance test case coverage, driving verification-workflow improvements across the team.',
+      'Served as the team\'s go-to reference for verification practices.',
     ],
   },
   {
@@ -125,7 +125,7 @@ export const skillsTree: SkillNode[] = [
     name: 'AI & Automation',
     children: [
       { name: 'Claude Code (skills, plugins, workflows)', level: 'proficient' },
-      { name: 'AI Integration in Applications', level: 'proficient' },
+      { name: 'AI-Driven Data Processing & Workflow Apps', level: 'proficient' },
     ],
   },
 ];
