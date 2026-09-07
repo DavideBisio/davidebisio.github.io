@@ -49,13 +49,16 @@ import { profile, experience, education, skillsTree } from '../../data/cv';
     <ul class="space-y-4">
       {
         education.map((edu) => (
-          <li class="flex flex-wrap items-baseline justify-between gap-x-4">
-            <p class="font-medium">
-              {edu.degree} &middot; {edu.school}
-            </p>
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-              {edu.start} – {edu.end ?? 'Present'}
-            </p>
+          <li>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+              <p class="font-medium">
+                {edu.degree} &middot; {edu.school}
+              </p>
+              <p class="text-sm text-slate-500 dark:text-slate-400">
+                {edu.start} – {edu.end ?? 'Present'}
+              </p>
+            </div>
+            {edu.notes && <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">{edu.notes}</p>}
           </li>
         ))
       }

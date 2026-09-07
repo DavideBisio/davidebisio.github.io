@@ -2,8 +2,9 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { profile } from '../data/cv';
+import { articleSlug } from '../lib/articles';
 
-const latestArticles = (await getCollection('articles', ({ data }) => !data.draft))
+const latestArticles = (await getCollection('articles', ({ data }) => !data.draft && data.category === 'professional'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
 ---
@@ -38,7 +39,7 @@ const latestArticles = (await getCollection('articles', ({ data }) => !data.draf
         <ul class="space-y-4">
           {latestArticles.map((article) => (
             <li>
-              <a href={`/articles/${article.id}/`} class="group block">
+              <a href={`/articles/${articleSlug(article)}/`} class="group block">
                 <p class="font-medium group-hover:text-sky-600 dark:group-hover:text-sky-400">
                   {article.data.title}
                 </p>

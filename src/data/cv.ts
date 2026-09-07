@@ -23,69 +23,109 @@ export interface Education {
 
 export const profile = {
   name: 'Davide Bisio',
-  title: 'Software Engineer',
+  title: 'Senior Digital Verification Engineer',
   location: 'Italy',
   email: 'davide.bisio92@gmail.com',
   summary:
-    'Software engineer with a focus on building reliable, well-tested systems. Replace this with your real summary.',
-  links: [
-    { label: 'GitHub', url: 'https://github.com/davidebisio' },
-    { label: 'LinkedIn', url: 'https://linkedin.com/in/REPLACE_ME' },
-  ],
+    'Digital verification engineer with a background in UVM testbench development, formal verification, and analog/DSP modeling for mixed-signal designs. Currently applying the same rigor to integrating AI tooling — Claude Code skills, plugins, and automated workflows — into engineering practice.',
+  links: [{ label: 'GitHub', url: 'https://github.com/davidebisio' }],
 };
 
 export const experience: Experience[] = [
   {
-    role: 'Software Engineer',
-    company: 'Replace With Company',
-    location: 'Remote',
-    start: '2022',
+    role: 'Sr Digital Verification Engineer',
+    company: 'Allegro MicroSystems Europe Ltd.',
+    start: 'Oct 2023',
     end: 'Present',
     highlights: [
-      'Replace with a concrete achievement, ideally with a number.',
-      'Replace with another achievement.',
+      'UVM testbench deployment and UVC development for verification environments.',
+      'Formal verification of digital designs.',
+      'Analog modeling for verification, with Python and Git-based tooling.',
+      'AI solutions: deep dive into Claude Code — developing skills, plugins, and automated workflows integrated into the engineering process; integrating AI into applications.',
+    ],
+  },
+  {
+    role: 'Digital Verification Engineer',
+    company: 'STMicroelectronics',
+    location: 'Milan',
+    start: '2018',
+    end: 'Oct 2023',
+    highlights: [
+      'In charge of introducing new verification methodologies and assessing/improving verification workflow.',
+      'DSP modeling and assertion-based verification (SVA).',
+      'Reference point for verification practices within the team.',
+    ],
+  },
+  {
+    role: 'Powertrain Electronics',
+    company: 'Team H2politO, Politecnico di Torino',
+    start: '2014',
+    end: '2015',
+    highlights: [
+      'Developed the powertrain electronics, dashboard UI, datalogging and telemetry for a two-seat hybrid vehicle prototype.',
+      'Twice led the electronics division to compete at the Shell Eco-marathon (Rotterdam).',
     ],
   },
 ];
 
 export const education: Education[] = [
   {
-    degree: 'Replace With Degree',
-    school: 'Replace With University',
-    start: '2014',
+    degree: "Master's Degree in Electronic Engineering",
+    school: 'Politecnico di Torino',
+    start: '2015',
     end: '2018',
+    notes: 'Thesis: real-time modeling and testbench implementation of digital signal processing for MEMS sensors. Final grade: 103/110.',
+  },
+  {
+    degree: "Bachelor's Degree in Electronic Engineering",
+    school: 'Politecnico di Torino',
+    start: '2011',
+    end: '2015',
+    notes: 'Final grade: 84/110.',
   },
 ];
 
 export const skillsTree: SkillNode[] = [
   {
-    name: 'Languages',
+    name: 'Verification',
     children: [
-      { name: 'TypeScript', level: 'expert' },
+      { name: 'UVM (SystemVerilog)', level: 'expert' },
+      { name: 'UVC Development', level: 'expert' },
+      { name: 'Formal Verification (Jasper Gold)', level: 'expert' },
+      { name: 'Assertion-Based Verification (SVA)', level: 'expert' },
+      { name: 'Functional & Code Coverage', level: 'proficient' },
+      { name: 'Low Power Verification (UPF)', level: 'proficient' },
+      { name: 'Gate-Level / Post-Layout Simulation', level: 'proficient' },
+    ],
+  },
+  {
+    name: 'Languages & Scripting',
+    children: [
+      { name: 'SystemVerilog', level: 'expert' },
       { name: 'Python', level: 'proficient' },
-      { name: 'Go', level: 'familiar' },
+      { name: 'MATLAB', level: 'proficient' },
+      { name: 'Tcl / AWK', level: 'familiar' },
     ],
   },
   {
-    name: 'Frontend',
-    children: [
-      { name: 'React', level: 'expert' },
-      { name: 'Astro', level: 'proficient' },
-    ],
-  },
-  {
-    name: 'Backend',
-    children: [
-      { name: 'Node.js', level: 'expert' },
-      { name: 'PostgreSQL', level: 'proficient' },
-    ],
-  },
-  {
-    name: 'Tools & Practices',
+    name: 'Tools',
     children: [
       { name: 'Git', level: 'expert' },
-      { name: 'Docker', level: 'proficient' },
-      { name: 'CI/CD', level: 'proficient' },
+      { name: 'Cadence Xcelium / Indago / vManager', level: 'proficient' },
+    ],
+  },
+  {
+    name: 'Domain Modeling',
+    children: [
+      { name: 'Analog Modeling for Verification', level: 'proficient' },
+      { name: 'DSP / MEMS Sensor Modeling', level: 'proficient' },
+    ],
+  },
+  {
+    name: 'AI & Automation',
+    children: [
+      { name: 'Claude Code (skills, plugins, workflows)', level: 'proficient' },
+      { name: 'AI Integration in Applications', level: 'proficient' },
     ],
   },
 ];
