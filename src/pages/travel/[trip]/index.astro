@@ -7,6 +7,7 @@ import Layout from '../../../layouts/Layout.astro';
 import TripMap from '../../../components/TripMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
 import { parseGpx } from '../../../lib/gpx';
+import { renderNotesHtml } from '../../../lib/notes';
 import { tripSlug, sortDaysByDate, type TripDay } from '../../../lib/trips';
 
 export async function getStaticPaths() {
@@ -24,11 +25,9 @@ const days = sortDaysByDate(trip.data.days);
 const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-function paragraphs(notes: string): string[] {
-  return notes
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+function labelFromFilename(filename: string): string {
+  const base = filename.split('/').pop()!.replace(/\.gpx$/i, '');
+  return base.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // GPX files are colocated with the trip's markdown but aren't part of the
@@ -39,15 +38,18 @@ const gpxUrls = import.meta.glob('/src/content/trips/**/*.gpx', {
   eager: true,
 }) as Record<string, string>;
 
-async function loadTrack(day: TripDay) {
-  if (!day.gpx || !trip.filePath) return null;
+async function loadTracks(day: TripDay) {
+  if (!trip.filePath) return [];
   const tripDir = path.posix.dirname(trip.filePath);
-  const gpxRelPath = path.posix.join(tripDir, day.gpx.replace(/^\.\//, ''));
-  const xml = fs.readFileSync(path.join(process.cwd(), gpxRelPath), 'utf-8');
-  return {
-    track: parseGpx(xml),
-    href: gpxUrls[`/${gpxRelPath}`] ?? null,
-  };
+  return day.gpx.map((gpxFile) => {
+    const gpxRelPath = path.posix.join(tripDir, gpxFile.replace(/^\.\//, ''));
+    const xml = fs.readFileSync(path.join(process.cwd(), gpxRelPath), 'utf-8');
+    return {
+      label: labelFromFilename(gpxFile),
+      track: parseGpx(xml),
+      href: gpxUrls[`/${gpxRelPath}`] ?? null,
+    };
+  });
 }
 
 async function loadPhotos(day: TripDay) {
@@ -61,7 +63,7 @@ async function loadPhotos(day: TripDay) {
 
 const dayExtras = await Promise.all(
   days.map(async (day) => ({
-    track: await loadTrack(day),
+    tracks: await loadTracks(day),
     photos: await loadPhotos(day),
   })),
 );
@@ -93,7 +95,7 @@ const dayExtras = await Promise.all(
   <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
     {
       days.map((day, i) => {
-        const { track, photos } = dayExtras[i];
+        const { tracks, photos } = dayExtras[i];
         return (
           <li class="relative">
             <span class="absolute -left-[1.6rem] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-600 dark:bg-sky-400" />
@@ -116,11 +118,7 @@ const dayExtras = await Promise.all(
             )}
 
             {day.notes && (
-              <div class="prose prose-slate mt-4 max-w-none dark:prose-invert">
-                {paragraphs(day.notes).map((p) => (
-                  <p>{p}</p>
-                ))}
-              </div>
+              <div class="prose prose-slate mt-4 max-w-none dark:prose-invert" set:html={renderNotesHtml(day.notes)} />
             )}
 
             {photos.length > 0 && (
@@ -138,38 +136,39 @@ const dayExtras = await Promise.all(
               </div>
             )}
 
-            {track && (
+            {tracks.map((entry) => (
               <div class="mt-4">
-                <TripMap client:visible points={track.track.points.map((p) => [p.lat, p.lon])} />
+                {tracks.length > 1 && <p class="mb-2 text-sm font-medium">{entry.label}</p>}
+                <TripMap client:visible points={entry.track.points.map((p) => [p.lat, p.lon])} />
                 <dl class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                   <div>
                     <dt class="text-slate-500 dark:text-slate-400">Distance</dt>
-                    <dd class="font-medium">{track.track.distanceKm.toFixed(1)} km</dd>
+                    <dd class="font-medium">{entry.track.distanceKm.toFixed(1)} km</dd>
                   </div>
                   <div>
                     <dt class="text-slate-500 dark:text-slate-400">Elevation gain</dt>
-                    <dd class="font-medium">{Math.round(track.track.elevationGainM)} m</dd>
+                    <dd class="font-medium">{Math.round(entry.track.elevationGainM)} m</dd>
                   </div>
                   <div>
                     <dt class="text-slate-500 dark:text-slate-400">Elevation loss</dt>
-                    <dd class="font-medium">{Math.round(track.track.elevationLossM)} m</dd>
+                    <dd class="font-medium">{Math.round(entry.track.elevationLossM)} m</dd>
                   </div>
-                  {track.track.durationMinutes !== null && (
+                  {entry.track.durationMinutes !== null && (
                     <div>
                       <dt class="text-slate-500 dark:text-slate-400">Duration</dt>
                       <dd class="font-medium">
-                        {Math.floor(track.track.durationMinutes / 60)}h {Math.round(track.track.durationMinutes % 60)}m
+                        {Math.floor(entry.track.durationMinutes / 60)}h {Math.round(entry.track.durationMinutes % 60)}m
                       </dd>
                     </div>
                   )}
                 </dl>
-                {track.href && (
-                  <a href={track.href} download class="mt-4 inline-block text-sm font-medium text-sky-600 dark:text-sky-400">
+                {entry.href && (
+                  <a href={entry.href} download class="mt-4 inline-block text-sm font-medium text-sky-600 dark:text-sky-400">
                     Download GPX
                   </a>
                 )}
               </div>
-            )}
+            ))}
           </li>
         );
       })

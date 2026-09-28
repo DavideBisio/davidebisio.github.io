@@ -16,7 +16,11 @@ export interface GpxTrack {
   durationMinutes: number | null;
 }
 
-const TRKPT_RE = /<trkpt\b[^>]*\blat="([-\d.]+)"[^>]*\blon="([-\d.]+)"[^>]*>([\s\S]*?)<\/trkpt>/g;
+// Matches both self-closing `<trkpt lat="…" lon="…"/>` (e.g. CalTopo exports
+// with no elevation/time) and paired `<trkpt …>…</trkpt>` tags.
+const TRKPT_RE = /<trkpt\b([^>]*?)\/>|<trkpt\b([^>]*?)>([\s\S]*?)<\/trkpt>/g;
+const LAT_RE = /\blat="(-?[\d.]+)"/;
+const LON_RE = /\blon="(-?[\d.]+)"/;
 const ELE_RE = /<ele>([-\d.]+)<\/ele>/;
 const TIME_RE = /<time>([^<]+)<\/time>/;
 const NAME_RE = /<trk>[\s\S]*?<name>([^<]*)<\/name>/;
@@ -39,12 +43,16 @@ export function parseGpx(xml: string): GpxTrack {
 
   TRKPT_RE.lastIndex = 0;
   while ((match = TRKPT_RE.exec(xml)) !== null) {
-    const [, lat, lon, inner] = match;
+    const attrs = match[1] ?? match[2] ?? '';
+    const inner = match[3] ?? '';
+    const latMatch = LAT_RE.exec(attrs);
+    const lonMatch = LON_RE.exec(attrs);
+    if (!latMatch || !lonMatch) continue;
     const eleMatch = ELE_RE.exec(inner);
     const timeMatch = TIME_RE.exec(inner);
     points.push({
-      lat: Number.parseFloat(lat),
-      lon: Number.parseFloat(lon),
+      lat: Number.parseFloat(latMatch[1]),
+      lon: Number.parseFloat(lonMatch[1]),
       ele: eleMatch ? Number.parseFloat(eleMatch[1]) : null,
       time: timeMatch ? timeMatch[1] : null,
     });

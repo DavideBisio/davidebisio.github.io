@@ -39,8 +39,8 @@ const trips = defineCollection({
             activities: z.array(z.string()).default([]),
             notes: z.string().optional(),
             images: z.array(image()).default([]),
-            // Filename of a colocated .gpx file (relative to the trip folder), e.g. "./ride.gpx".
-            gpx: z.string().optional(),
+            // Filenames of colocated .gpx files (relative to the trip folder), e.g. ["./ride.gpx"].
+            gpx: z.array(z.string()).default([]),
           }),
         )
         .default([]),
