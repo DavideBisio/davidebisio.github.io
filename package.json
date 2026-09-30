@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/generate-cv-pdf.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "import-gpx": "node scripts/import-gpx-tracks.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",
