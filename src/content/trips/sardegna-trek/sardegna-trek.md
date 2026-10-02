@@ -7,6 +7,7 @@ location: "Sardegna"
 country: "Italy"
 tags: ["trekking", "vanlife", "sardinia", "italy"]
 draft: false
+routesGpx: "./sardegna-trek-2026-drive.gpx"
 days:
   - date: 2026-09-11
     title: "Drive and boat towards Sardinia"
@@ -19,7 +20,6 @@ days:
     title: "Drive towards Oliena + detours"
     places: ["San Teodoro", "Marina di Orosei", "Oliena"]
     activities: ["Cortes Apertas Oliena"]
-    route: "./2026-09-12-route.gpx"
     notes: |
       After disembarking I drove towards Oliena. First detour at San Teodoro for a
       quick coffee. It's a small village of holiday homes, nothing interesting there.
@@ -37,7 +37,6 @@ days:
     activities: ["Hiking to Punta Corrasi"]
     gpx:
       - "./hiking-to-punta-corrasi.gpx"
-    route: "./2026-09-13-route.gpx"
     notes: |
       Hiking to Punta Corrasi: awesome panoramic view from there. No particular notes
       about this path, it's well signposted, except that the majority of the trail
@@ -51,7 +50,6 @@ days:
     activities: ["Hiking to Punta Cusidore"]
     gpx:
       - "./hiking-to-punta-cusidore.gpx"
-    route: "./2026-09-14-route.gpx"
     notes: |
       Hiking to Punta Cusidore: the same initial path as the day before, now turning left
       on a sun exposed high plane, with many caves and ancient sheepfolds. The path is

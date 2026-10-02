@@ -30,6 +30,10 @@ const trips = defineCollection({
       coverImage: image().optional(),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
+      // Optional single GPX file (relative to the trip folder) holding every day's
+      // driving route as a separately-named <trk> ("Route DD/MM/YYYY") plus a shared
+      // set of <wpt> waypoints, for the trip-level journey map.
+      routesGpx: z.string().optional(),
       days: z
         .array(
           z.object({
@@ -41,9 +45,6 @@ const trips = defineCollection({
             images: z.array(image()).default([]),
             // Filenames of colocated .gpx files (relative to the trip folder), e.g. ["./ride.gpx"].
             gpx: z.array(z.string()).default([]),
-            // Optional per-day travel route + waypoints for the trip-level journey map
-            // (relative to the trip folder) — separate from the activity gpx above.
-            route: z.string().optional(),
           }),
         )
         .default([]),

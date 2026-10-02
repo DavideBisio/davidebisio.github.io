@@ -4,12 +4,10 @@ import { getImage } from 'astro:assets';
 import path from 'node:path';
 import fs from 'node:fs';
 import Layout from '../../../layouts/Layout.astro';
-import TripMap from '../../../components/TripMap.tsx';
-import JourneyMap from '../../../components/JourneyMap.tsx';
 import DayFocusMap from '../../../components/DayFocusMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
-import { parseGpx, parseWaypoints } from '../../../lib/gpx';
-import type { JourneyDay } from '../../../lib/journey';
+import { parseGpx, parseTracks, parseWaypoints, buildGpxFile } from '../../../lib/gpx';
+import type { JourneyDay, JourneyTrack } from '../../../lib/journey';
 import { renderNotesHtml } from '../../../lib/notes';
 import { tripSlug, sortDaysByDate, type TripDay } from '../../../lib/trips';
 
@@ -55,22 +53,6 @@ async function loadTracks(day: TripDay) {
   });
 }
 
-async function loadRoute(day: TripDay, dayIndex: number): Promise<JourneyDay | null> {
-  if (!day.route || !trip.filePath) return null;
-  const tripDir = path.posix.dirname(trip.filePath);
-  const routeRelPath = path.posix.join(tripDir, day.route.replace(/^\.\//, ''));
-  const xml = fs.readFileSync(path.join(process.cwd(), routeRelPath), 'utf-8');
-  const track = parseGpx(xml);
-  return {
-    dayIndex,
-    label: day.title,
-    points: track.points.map((p) => [p.lat, p.lon] as [number, number]),
-    waypoints: parseWaypoints(xml),
-    gpxHref: gpxUrls[`/${routeRelPath}`] ?? null,
-    routeFilename: day.route.replace(/^\.\//, ''),
-  };
-}
-
 async function loadPhotos(day: TripDay) {
   return Promise.all(
     day.images.map(async (img) => ({
@@ -87,9 +69,56 @@ const dayExtras = await Promise.all(
   })),
 );
 
-const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i)))).filter(
-  (d): d is JourneyDay => d !== null,
-);
+function trackDateLabel(date: Date): string {
+  const dd = String(date.getUTCDate()).padStart(2, '0');
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${date.getUTCFullYear()}`;
+}
+
+// Loads the trip's single combined routes+waypoints file (if any) and merges
+// each day's driving route into that day's own activity tracks, so the
+// sidebar/popup map shows "track and route of the day" as one dynamic map.
+function loadJourney(): JourneyDay[] {
+  if (!trip.data.routesGpx || !trip.filePath) return [];
+  const tripDir = path.posix.dirname(trip.filePath);
+  const routesRelPath = path.posix.join(tripDir, trip.data.routesGpx.replace(/^\.\//, ''));
+  const xml = fs.readFileSync(path.join(process.cwd(), routesRelPath), 'utf-8');
+  const routeTracks = parseTracks(xml);
+  // Waypoints aren't tied to a specific day in the source data, so the same
+  // shared list is shown on every day that has a map.
+  const waypoints = parseWaypoints(xml);
+
+  return days
+    .map((day, i): JourneyDay => {
+      const tracks: JourneyTrack[] = dayExtras[i].tracks.map((entry) => ({
+        label: entry.label,
+        points: entry.track.points.map((p) => [p.lat, p.lon] as [number, number]),
+        variant: 'activity' as const,
+      }));
+
+      const routeName = `Route ${trackDateLabel(day.date)}`;
+      const routeTrack = routeTracks.find((t) => t.name === routeName);
+      const downloads: JourneyDay['downloads'] = [];
+      if (routeTrack && routeTrack.points.length > 0) {
+        tracks.push({
+          label: routeName,
+          points: routeTrack.points.map((p) => [p.lat, p.lon] as [number, number]),
+          variant: 'route',
+        });
+        const gpxXml = buildGpxFile(routeName, routeTrack.points);
+        downloads.push({
+          label: 'Download route GPX',
+          href: `data:application/gpx+xml;base64,${Buffer.from(gpxXml).toString('base64')}`,
+          filename: `route-${day.date.toISOString().slice(0, 10)}.gpx`,
+        });
+      }
+
+      return { dayIndex: i, label: day.title, tracks, waypoints, downloads };
+    })
+    .filter((d) => d.tracks.some((t) => t.points.length > 0));
+}
+
+const journeyDays = loadJourney();
 const hasJourney = journeyDays.length > 0;
 ---
 
@@ -115,12 +144,6 @@ const hasJourney = journeyDays.length > 0;
   </div>
 
   {days.length > 0 && <h2 class="mt-10 mb-6 text-lg font-semibold tracking-tight">Days</h2>}
-
-  {journeyDays.length > 0 && (
-    <div class="mb-8">
-      <JourneyMap client:visible days={journeyDays} mode="overview" />
-    </div>
-  )}
 
   <div class:list={['gap-8', hasJourney && 'lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start']}>
     <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
@@ -173,7 +196,6 @@ const hasJourney = journeyDays.length > 0;
             {tracks.map((entry) => (
               <div class="mt-4">
                 {tracks.length > 1 && <p class="mb-2 text-sm font-medium">{entry.label}</p>}
-                <TripMap client:visible points={entry.track.points.map((p) => [p.lat, p.lon])} />
                 <dl class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                   <div>
                     <dt class="text-slate-500 dark:text-slate-400">Distance</dt>

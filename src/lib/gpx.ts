@@ -45,6 +45,14 @@ function haversineKm(a: GpxPoint, b: GpxPoint): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+const TRK_BLOCK_RE = /<trk>[\s\S]*?<\/trk>/g;
+
+/** Splits a multi-track GPX file into its individual `<trk>` blocks, each
+ * parsed with parseGpx. Used for a combined file holding one track per day. */
+export function parseTracks(xml: string): GpxTrack[] {
+  return (xml.match(TRK_BLOCK_RE) ?? []).map((block) => parseGpx(block));
+}
+
 /** Parses raw GPX XML into a track with plain points and precomputed stats, all at build time. */
 export function parseGpx(xml: string): GpxTrack {
   const points: GpxPoint[] = [];
@@ -128,4 +136,11 @@ export function parseWaypoints(xml: string): GpxWaypoint[] {
   }
 
   return waypoints;
+}
+
+/** Builds a minimal single-track GPX document, for offering a day's slice of a
+ * shared multi-track file as its own downloadable file. */
+export function buildGpxFile(name: string, points: GpxPoint[]): string {
+  const trkpts = points.map((p) => `<trkpt lat="${p.lat}" lon="${p.lon}"/>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="davidebisio.github.io"><trk><name>${name}</name><trkseg>${trkpts}</trkseg></trk></gpx>`;
 }

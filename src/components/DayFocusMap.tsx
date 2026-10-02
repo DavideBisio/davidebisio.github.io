@@ -7,14 +7,11 @@ interface Props {
   days: JourneyDay[];
 }
 
+// Exact match only: a day with no track/route content must show no map and
+// no popup button, so this never falls back to an earlier day's data.
 function resolveActiveDay(days: JourneyDay[], activeDayIndex: number | null): JourneyDay | null {
-  if (days.length === 0) return null;
-  if (activeDayIndex === null) return days[0];
-  let candidate: JourneyDay | null = null;
-  for (const day of days) {
-    if (day.dayIndex <= activeDayIndex) candidate = day;
-  }
-  return candidate ?? days[0];
+  if (activeDayIndex === null) return null;
+  return days.find((d) => d.dayIndex === activeDayIndex) ?? null;
 }
 
 const POPUP_TITLE_ID = 'day-focus-map-popup-title';
@@ -54,10 +51,12 @@ export default function DayFocusMap({ days }: Props) {
   const activeDay = resolveActiveDay(days, activeDayIndex);
   if (!activeDay) return null;
 
+  const snapshotDay = snapshotDayIndex !== null ? (days.find((d) => d.dayIndex === snapshotDayIndex) ?? null) : null;
+
   return (
     <>
       <div className="hidden lg:block">
-        <JourneyMap days={days} mode="single-day" activeDayIndex={activeDay.dayIndex} />
+        <JourneyMap day={activeDay} />
       </div>
 
       <button
@@ -76,7 +75,7 @@ export default function DayFocusMap({ days }: Props) {
         🗺
       </button>
 
-      {isPopupOpen && snapshotDayIndex !== null && (
+      {isPopupOpen && snapshotDay && (
         <div
           role="dialog"
           aria-modal="true"
@@ -90,13 +89,13 @@ export default function DayFocusMap({ days }: Props) {
           >
             <div className="mb-2 flex items-center justify-between">
               <p id={POPUP_TITLE_ID} className="text-sm font-medium">
-                {days.find((d) => d.dayIndex === snapshotDayIndex)?.label}
+                {snapshotDay.label}
               </p>
               <button ref={closeRef} type="button" onClick={closePopup} aria-label="Close" className="text-xl leading-none">
                 &times;
               </button>
             </div>
-            <JourneyMap days={days} mode="single-day" activeDayIndex={snapshotDayIndex} />
+            <JourneyMap day={snapshotDay} />
           </div>
         </div>
       )}
