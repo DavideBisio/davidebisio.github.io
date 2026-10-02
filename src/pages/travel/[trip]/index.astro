@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import Layout from '../../../layouts/Layout.astro';
 import TripMap from '../../../components/TripMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
-import { parseGpx } from '../../../lib/gpx';
+import { parseGpx, parseWaypoints } from '../../../lib/gpx';
+import type { JourneyDay } from '../../../lib/journey';
 import { renderNotesHtml } from '../../../lib/notes';
 import { tripSlug, sortDaysByDate, type TripDay } from '../../../lib/trips';
 
@@ -52,6 +53,21 @@ async function loadTracks(day: TripDay) {
   });
 }
 
+async function loadRoute(day: TripDay, dayIndex: number): Promise<JourneyDay | null> {
+  if (!day.route || !trip.filePath) return null;
+  const tripDir = path.posix.dirname(trip.filePath);
+  const routeRelPath = path.posix.join(tripDir, day.route.replace(/^\.\//, ''));
+  const xml = fs.readFileSync(path.join(process.cwd(), routeRelPath), 'utf-8');
+  const track = parseGpx(xml);
+  return {
+    dayIndex,
+    label: day.title,
+    points: track.points.map((p) => [p.lat, p.lon] as [number, number]),
+    waypoints: parseWaypoints(xml),
+    gpxHref: gpxUrls[`/${routeRelPath}`] ?? null,
+  };
+}
+
 async function loadPhotos(day: TripDay) {
   return Promise.all(
     day.images.map(async (img) => ({
@@ -66,6 +82,10 @@ const dayExtras = await Promise.all(
     tracks: await loadTracks(day),
     photos: await loadPhotos(day),
   })),
+);
+
+const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i)))).filter(
+  (d): d is JourneyDay => d !== null,
 );
 ---
 
