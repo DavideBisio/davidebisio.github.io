@@ -67,6 +67,7 @@ async function loadRoute(day: TripDay, dayIndex: number): Promise<JourneyDay | n
     points: track.points.map((p) => [p.lat, p.lon] as [number, number]),
     waypoints: parseWaypoints(xml),
     gpxHref: gpxUrls[`/${routeRelPath}`] ?? null,
+    routeFilename: day.route.replace(/^\.\//, ''),
   };
 }
 
