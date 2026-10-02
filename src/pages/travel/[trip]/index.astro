@@ -88,9 +88,10 @@ const dayExtras = await Promise.all(
 const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i)))).filter(
   (d): d is JourneyDay => d !== null,
 );
+const hasJourney = journeyDays.length > 0;
 ---
 
-<Layout title={trip.data.title} description={trip.data.description}>
+<Layout title={trip.data.title} description={trip.data.description} wide={hasJourney} snapScroll={hasJourney}>
   <a href="/travel/" class="text-sm font-medium text-sky-600 dark:text-sky-400">Travel log</a>
 
   <header class="mt-2 mb-8">
@@ -119,12 +120,16 @@ const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i))))
     </div>
   )}
 
-  <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
+  <div class:list={['gap-8', hasJourney && 'lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start']}>
+    <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
     {
       days.map((day, i) => {
         const { tracks, photos } = dayExtras[i];
         return (
-          <li class="relative">
+          <li
+            class:list={['relative', hasJourney && 'snap-start']}
+            data-day-index={hasJourney ? i : undefined}
+          >
             <span class="absolute -left-[1.6rem] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-600 dark:bg-sky-400" />
 
             <time class="text-sm text-slate-500 dark:text-slate-400">{dayFormatter.format(day.date)}</time>
@@ -200,7 +205,16 @@ const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i))))
         );
       })
     }
-  </ol>
+    </ol>
+
+    {hasJourney && (
+      <div class="lg:sticky lg:top-6">
+        <div class="hidden h-80 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-400 lg:flex dark:border-slate-700">
+          Map placeholder (Task 5 replaces this with DayFocusMap)
+        </div>
+      </div>
+    )}
+  </div>
 
   <Lightbox />
 </Layout>
