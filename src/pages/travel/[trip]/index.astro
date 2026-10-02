@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import Layout from '../../../layouts/Layout.astro';
 import TripMap from '../../../components/TripMap.tsx';
 import JourneyMap from '../../../components/JourneyMap.tsx';
+import DayFocusMap from '../../../components/DayFocusMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
 import { parseGpx, parseWaypoints } from '../../../lib/gpx';
 import type { JourneyDay } from '../../../lib/journey';
@@ -209,9 +210,7 @@ const hasJourney = journeyDays.length > 0;
 
     {hasJourney && (
       <div class="lg:sticky lg:top-6">
-        <div class="hidden h-80 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-400 lg:flex dark:border-slate-700">
-          Map placeholder (Task 5 replaces this with DayFocusMap)
-        </div>
+        <DayFocusMap client:load days={journeyDays} />
       </div>
     )}
   </div>
