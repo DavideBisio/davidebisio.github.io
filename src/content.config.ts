@@ -41,6 +41,9 @@ const trips = defineCollection({
             images: z.array(image()).default([]),
             // Filenames of colocated .gpx files (relative to the trip folder), e.g. ["./ride.gpx"].
             gpx: z.array(z.string()).default([]),
+            // Optional per-day travel route + waypoints for the trip-level journey map
+            // (relative to the trip folder) — separate from the activity gpx above.
+            route: z.string().optional(),
           }),
         )
         .default([]),

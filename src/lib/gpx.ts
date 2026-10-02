@@ -25,6 +25,15 @@ const ELE_RE = /<ele>([-\d.]+)<\/ele>/;
 const TIME_RE = /<time>([^<]+)<\/time>/;
 const NAME_RE = /<trk>[\s\S]*?<name>([^<]*)<\/name>/;
 
+export interface GpxWaypoint {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+const WPT_RE = /<wpt\b([^>]*?)>([\s\S]*?)<\/wpt>/g;
+const WPT_NAME_RE = /<name>([^<]*)<\/name>/;
+
 function haversineKm(a: GpxPoint, b: GpxPoint): number {
   const R = 6371;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -89,4 +98,34 @@ export function parseGpx(xml: string): GpxTrack {
     endTime,
     durationMinutes,
   };
+}
+
+/** Parses `<wpt>` entries (named waypoints) from raw GPX XML. Skips a `<wpt>`
+ * with no `<name>`; throws on one with unparsable lat/lon, consistent with
+ * parseGpx's build-time-fail posture for malformed GPX. */
+export function parseWaypoints(xml: string): GpxWaypoint[] {
+  const waypoints: GpxWaypoint[] = [];
+  let match: RegExpExecArray | null;
+
+  WPT_RE.lastIndex = 0;
+  while ((match = WPT_RE.exec(xml)) !== null) {
+    const attrs = match[1];
+    const inner = match[2];
+    const nameMatch = WPT_NAME_RE.exec(inner);
+    if (!nameMatch) continue;
+
+    const latMatch = LAT_RE.exec(attrs);
+    const lonMatch = LON_RE.exec(attrs);
+    if (!latMatch || !lonMatch) {
+      throw new Error(`<wpt> "${nameMatch[1].trim()}" is missing a parsable lat/lon`);
+    }
+
+    waypoints.push({
+      name: nameMatch[1].trim(),
+      lat: Number.parseFloat(latMatch[1]),
+      lon: Number.parseFloat(lonMatch[1]),
+    });
+  }
+
+  return waypoints;
 }
