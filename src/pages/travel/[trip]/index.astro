@@ -5,6 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import Layout from '../../../layouts/Layout.astro';
 import TripMap from '../../../components/TripMap.tsx';
+import JourneyMap from '../../../components/JourneyMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
 import { parseGpx, parseWaypoints } from '../../../lib/gpx';
 import type { JourneyDay } from '../../../lib/journey';
@@ -111,6 +112,12 @@ const journeyDays = (await Promise.all(days.map((day, i) => loadRoute(day, i))))
   </div>
 
   {days.length > 0 && <h2 class="mt-10 mb-6 text-lg font-semibold tracking-tight">Days</h2>}
+
+  {journeyDays.length > 0 && (
+    <div class="mb-8">
+      <JourneyMap client:visible days={journeyDays} mode="overview" />
+    </div>
+  )}
 
   <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
     {
