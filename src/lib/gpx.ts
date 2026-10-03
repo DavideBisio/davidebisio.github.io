@@ -34,7 +34,10 @@ export interface GpxWaypoint {
 const WPT_RE = /<wpt\b([^>]*?)>([\s\S]*?)<\/wpt>/g;
 const WPT_NAME_RE = /<name>([^<]*)<\/name>/;
 
-function haversineKm(a: GpxPoint, b: GpxPoint): number {
+/** Great-circle distance in km between two lat/lon points. Exported so
+ * callers can test proximity (e.g. "is this waypoint near this track?")
+ * without duplicating the formula. */
+export function haversineKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
   const R = 6371;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);

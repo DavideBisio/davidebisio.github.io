@@ -79,16 +79,7 @@ export default function JourneyMap({ day }: Props) {
         ref={containerRef}
         className="journey-map-tiles h-80 w-full rounded-lg border border-slate-200 dark:border-slate-800"
       />
-      <div className="mt-2 flex items-center justify-between text-sm">
-        <span className="font-medium">{day.label}</span>
-        {day.downloads.map((dl) => (
-          // `download` takes an explicit filename: data: URIs have no
-          // filename of their own for the browser to fall back to.
-          <a key={dl.href} href={dl.href} download={dl.filename} className="font-medium text-sky-600 dark:text-sky-400">
-            {dl.label}
-          </a>
-        ))}
-      </div>
+      <div className="mt-2 text-sm font-medium">{day.label}</div>
     </div>
   );
 }

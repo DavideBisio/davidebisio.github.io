@@ -15,8 +15,8 @@ export interface JourneyDay {
   dayIndex: number;
   label: string;
   tracks: JourneyTrack[];
-  // Waypoints aren't tied to a specific day in the source data, so the same
-  // shared list is shown on every day's map as context.
+  // Waypoints aren't tied to a specific day in the source data, so they're
+  // filtered down to the ones near this day's own tracks (see
+  // WAYPOINT_RADIUS_KM in index.astro) instead of showing the full shared set.
   waypoints: { name: string; lat: number; lon: number }[];
-  downloads: { label: string; href: string; filename: string }[];
 }

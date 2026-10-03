@@ -1,9 +1,26 @@
 import { useEffect, useState } from 'react';
 
+// The active day is the last one (in document order) whose top has scrolled
+// above this fraction of the viewport height — i.e. whichever day currently
+// occupies the "reading line" near the top of the screen.
+const THRESHOLD_FRACTION = 0.3;
+
 /** Tracks which day's timeline entry (by its `data-day-index` attribute) is
- * currently crossing a thin band near the top of the viewport, scrollspy-style.
- * Returns null if no day is currently in that band, or no `[data-day-index]`
- * elements exist in the DOM yet. */
+ * currently at the top of the viewport, scrollspy-style. Returns null before
+ * the first day has scrolled up to the threshold line, or if no
+ * `[data-day-index]` elements exist in the DOM yet.
+ *
+ * Deliberately not IntersectionObserver-based: its callback only reports
+ * elements whose intersection state *changed* since the previous callback,
+ * not every currently-intersecting element. Picking "topmost of this batch"
+ * silently keeps stale state whenever the day that should become active
+ * didn't itself cross a threshold on this tick — e.g. a short day near the
+ * end of the list whose top never dips below 30% of the viewport because
+ * there's no more page left to scroll past it, so the real "last visible"
+ * day was never hidden by a bottom-of-page special case the way it would be
+ * with a fixed index. Recomputing from live getBoundingClientRect() on every
+ * scroll avoids that whole class of bug — it just answers the current
+ * question each time instead of reacting to a stream of change events. */
 export function useActiveDay(): number | null {
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
 
@@ -11,47 +28,33 @@ export function useActiveDay(): number | null {
     const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-day-index]'));
     if (elements.length === 0) return;
 
-    const indices = elements
-      .map((el) => Number(el.getAttribute('data-day-index')))
-      .filter((n) => !Number.isNaN(n));
-    const lastIndex = indices.length > 0 ? Math.max(...indices) : null;
+    let rafId: number | null = null;
 
-    // The scrollspy band sits 20-70% down the viewport, which the last day's
-    // entry may never reach if it's short (there's no more page left to
-    // scroll past it) — without this, the last day could never become
-    // active. Being scrolled to the very bottom of the page always wins over
-    // whatever the intersection band reports, since an earlier (taller) day
-    // can still be straddling that band at max scroll.
-    function isAtBottom() {
-      return window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    function recompute() {
+      rafId = null;
+      const thresholdY = window.innerHeight * THRESHOLD_FRACTION;
+      let active: number | null = null;
+      for (const el of elements) {
+        if (el.getBoundingClientRect().top > thresholdY) continue;
+        const idx = Number(el.getAttribute('data-day-index'));
+        if (!Number.isNaN(idx)) active = idx;
+      }
+      setActiveDayIndex(active);
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (isAtBottom() && lastIndex !== null) {
-          setActiveDayIndex(lastIndex);
-          return;
-        }
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length === 0) return;
-        const topMost = visible.reduce((a, b) => (a.boundingClientRect.top <= b.boundingClientRect.top ? a : b));
-        const index = Number(topMost.target.getAttribute('data-day-index'));
-        setActiveDayIndex(Number.isNaN(index) ? null : index);
-      },
-      { rootMargin: '-20% 0px -70% 0px', threshold: 0 },
-    );
-
-    for (const el of elements) observer.observe(el);
-
-    function checkAtBottom() {
-      if (isAtBottom() && lastIndex !== null) setActiveDayIndex(lastIndex);
+    function onScrollOrResize() {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(recompute);
     }
-    window.addEventListener('scroll', checkAtBottom, { passive: true });
-    checkAtBottom();
+
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    recompute();
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', checkAtBottom);
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 

@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import Layout from '../../../layouts/Layout.astro';
 import DayFocusMap from '../../../components/DayFocusMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
-import { parseGpx, parseTracks, parseWaypoints, buildGpxFile } from '../../../lib/gpx';
+import { parseGpx, parseTracks, parseWaypoints, buildGpxFile, haversineKm } from '../../../lib/gpx';
 import type { JourneyDay, JourneyTrack } from '../../../lib/journey';
 import { renderNotesHtml } from '../../../lib/notes';
 import { tripSlug, sortDaysByDate, type TripDay } from '../../../lib/trips';
@@ -75,50 +75,76 @@ function trackDateLabel(date: Date): string {
   return `${dd}/${mm}/${date.getUTCFullYear()}`;
 }
 
-// Loads the trip's single combined routes+waypoints file (if any) and merges
-// each day's driving route into that day's own activity tracks, so the
-// sidebar/popup map shows "track and route of the day" as one dynamic map.
-function loadJourney(): JourneyDay[] {
-  if (!trip.data.routesGpx || !trip.filePath) return [];
+interface RouteDownload {
+  track: ReturnType<typeof parseGpx>;
+  href: string;
+  filename: string;
+}
+
+// A waypoint counts as "on" a day if it's within this distance of that day's
+// own tracks — picked empirically from the real trip data: every waypoint's
+// nearest matching day's track is within ~3.4km, while the next-nearest
+// unrelated day is always 5km+ away, so this sits squarely in the gap.
+const WAYPOINT_RADIUS_KM = 3.5;
+
+// Loads the trip's single combined routes+waypoints file (if any). Tracks are
+// matched to days by date elsewhere; waypoints have no day of their own, so
+// they're filtered to each day's own tracks by proximity instead.
+function loadRouteFile() {
+  if (!trip.data.routesGpx || !trip.filePath) return null;
   const tripDir = path.posix.dirname(trip.filePath);
   const routesRelPath = path.posix.join(tripDir, trip.data.routesGpx.replace(/^\.\//, ''));
   const xml = fs.readFileSync(path.join(process.cwd(), routesRelPath), 'utf-8');
-  const routeTracks = parseTracks(xml);
-  // Waypoints aren't tied to a specific day in the source data, so the same
-  // shared list is shown on every day that has a map.
-  const waypoints = parseWaypoints(xml);
-
-  return days
-    .map((day, i): JourneyDay => {
-      const tracks: JourneyTrack[] = dayExtras[i].tracks.map((entry) => ({
-        label: entry.label,
-        points: entry.track.points.map((p) => [p.lat, p.lon] as [number, number]),
-        variant: 'activity' as const,
-      }));
-
-      const routeName = `Route ${trackDateLabel(day.date)}`;
-      const routeTrack = routeTracks.find((t) => t.name === routeName);
-      const downloads: JourneyDay['downloads'] = [];
-      if (routeTrack && routeTrack.points.length > 0) {
-        tracks.push({
-          label: routeName,
-          points: routeTrack.points.map((p) => [p.lat, p.lon] as [number, number]),
-          variant: 'route',
-        });
-        const gpxXml = buildGpxFile(routeName, routeTrack.points);
-        downloads.push({
-          label: 'Download route GPX',
-          href: `data:application/gpx+xml;base64,${Buffer.from(gpxXml).toString('base64')}`,
-          filename: `route-${day.date.toISOString().slice(0, 10)}.gpx`,
-        });
-      }
-
-      return { dayIndex: i, label: day.title, tracks, waypoints, downloads };
-    })
-    .filter((d) => d.tracks.some((t) => t.points.length > 0));
+  return { routeTracks: parseTracks(xml), waypoints: parseWaypoints(xml) };
 }
 
-const journeyDays = loadJourney();
+const routeFile = loadRouteFile();
+
+// Indexed by day index, independent of the journey map: the per-day route
+// download link is shown in each day's description whether or not the trip
+// has a journey map at all.
+const routeDownloads: (RouteDownload | null)[] = days.map((day) => {
+  if (!routeFile) return null;
+  const routeName = `Route ${trackDateLabel(day.date)}`;
+  const routeTrack = routeFile.routeTracks.find((t) => t.name === routeName && t.points.length > 0);
+  if (!routeTrack) return null;
+  const gpxXml = buildGpxFile(routeName, routeTrack.points);
+  return {
+    track: routeTrack,
+    href: `data:application/gpx+xml;base64,${Buffer.from(gpxXml).toString('base64')}`,
+    filename: `route-${day.date.toISOString().slice(0, 10)}.gpx`,
+  };
+});
+
+function waypointsNearDay(points: [number, number][]) {
+  if (!routeFile) return [];
+  return routeFile.waypoints.filter((wpt) =>
+    points.some(([lat, lon]) => haversineKm({ lat, lon }, wpt) <= WAYPOINT_RADIUS_KM),
+  );
+}
+
+const journeyDays: JourneyDay[] = days
+  .map((day, i): JourneyDay => {
+    const tracks: JourneyTrack[] = dayExtras[i].tracks.map((entry) => ({
+      label: entry.label,
+      points: entry.track.points.map((p) => [p.lat, p.lon] as [number, number]),
+      variant: 'activity' as const,
+    }));
+
+    const routeDownload = routeDownloads[i];
+    if (routeDownload) {
+      tracks.push({
+        label: routeDownload.track.name ?? 'Route',
+        points: routeDownload.track.points.map((p) => [p.lat, p.lon] as [number, number]),
+        variant: 'route',
+      });
+    }
+
+    const dayPoints = tracks.flatMap((t) => t.points);
+    return { dayIndex: i, label: day.title, tracks, waypoints: waypointsNearDay(dayPoints) };
+  })
+  .filter((d) => d.tracks.some((t) => t.points.length > 0));
+
 const hasJourney = journeyDays.length > 0;
 ---
 
@@ -220,11 +246,23 @@ const hasJourney = journeyDays.length > 0;
                 </dl>
                 {entry.href && (
                   <a href={entry.href} download class="mt-4 inline-block text-sm font-medium text-sky-600 dark:text-sky-400">
-                    Download GPX
+                    Download activity GPX
                   </a>
                 )}
               </div>
             ))}
+
+            {routeDownloads[i] && (
+              <div class="mt-4">
+                <a
+                  href={routeDownloads[i]!.href}
+                  download={routeDownloads[i]!.filename}
+                  class="inline-block text-sm font-medium text-sky-600 dark:text-sky-400"
+                >
+                  Download route GPX
+                </a>
+              </div>
+            )}
           </li>
         );
       })
