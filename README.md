@@ -18,7 +18,7 @@ src/
   content.config.ts  # collection schemas: articles, trips
   data/cv.ts         # CV content: profile, experience, education, skills tree
   lib/                # articleSlug/tripSlug helpers, build-time GPX parsing
-  components/         # Header, Footer, ArticleList, SkillsTree, TripMap, Lightbox
+  components/         # Header, Footer, ArticleList, SkillsTree, Lightbox, JourneyMap, DayFocusMap, useActiveDay
   layouts/            # Layout, ArticleLayout
   pages/
     index.astro
@@ -46,15 +46,20 @@ This installs Node into `~/.local/opt` (no sudo) and adds it to `PATH` via
 
 ## Commands
 
-| Command              | Action                                                  |
-| :-------------------- | :------------------------------------------------------- |
-| `./setup.sh`           | One-time: install Linux-native Node, wire it into PATH   |
-| `npm install`          | Install dependencies                                      |
-| `./run_preview.sh`     | Start the dev server in the background (`localhost:4321`) |
-| `./run_preview.sh stop`| Stop the background dev server                            |
-| `npm run build`        | Build the site to `./dist/`, then render `dist/cv.pdf`     |
-| `npm run preview`      | Preview the production build locally                        |
-| `npm run import-gpx -- <trip-slug>` | Import raw Garmin `activity_*.gpx` exports into a trip |
+| Command                              | Action                                                     |
+| :------------------------------------ | :----------------------------------------------------------- |
+| `./setup.sh`                          | One-time (WSL): install Linux-native Node, wire it into PATH |
+| `npm install`                         | Install dependencies                                          |
+| `npm run dev`                         | Start the dev server in the foreground (`localhost:4321`)    |
+| `npm run build`                       | Build the site to `./dist/`, then render `dist/cv.pdf`        |
+| `npm run preview`                     | Preview the production build locally                          |
+| `npm run import-gpx -- <trip-slug>`   | Import raw Garmin `activity_*.gpx` exports into a trip         |
+
+The `astro` CLI itself (`astro dev --background`/`stop`/`status`/`logs`, for
+running the dev server in the background) isn't on `PATH` by default — it's a
+local dependency in `node_modules/.bin`. Reach it either with `npx astro ...`
+from anywhere, or with `./run_preview.sh [start|stop|status|logs]`, a thin
+wrapper that also fixes `PATH` for the WSL Node from `setup.sh` above.
 
 ## Adding an article
 
@@ -127,11 +132,14 @@ Trip-level intro/overview markdown goes in the file body, same as an article.
   with neither tag is skipped with a build warning.
 
 When a day has a matching track, its timeline entry parses it at build time
-(no parser shipped to the client) and renders a Leaflet map,
-distance/elevation/duration stats, a "Download activity GPX" link, and — if
-the combined route file has an entry for that day — a "Download route GPX"
-link. When a day has matching photos, small thumbnails are shown inline and
-clicking one opens it full-size in a lightbox.
+(no parser shipped to the client) and renders distance/elevation/duration
+stats, a "Download activity GPX" link, and — if the combined route file has
+an entry for that day — a "Download route GPX" link. There's no per-day
+inline map: a single Leaflet map (`DayFocusMap`) stays synced to whichever
+day is scrolled to the top of the viewport — sticky alongside the timeline on
+desktop, behind a floating button that opens it as a popup on narrower
+screens. When a day has matching photos, small thumbnails are shown inline
+and clicking one opens it full-size in a lightbox.
 
 ### Importing GPX tracks from Garmin Connect
 

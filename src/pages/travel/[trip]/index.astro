@@ -124,6 +124,21 @@ function loadGpxFiles(): { activityTracksByDate: Map<string, ActivityTrackEntry[
 
 const { activityTracksByDate, routeFile } = loadGpxFiles();
 
+// EXIF date tags have no timezone — they're the camera's local wall-clock
+// time, formatted "YYYY:MM:DD HH:MM:SS". Reading them with exifr's default
+// value revival round-trips them through a JS Date, which interprets that
+// naive string as being in *this process's* local timezone, not the
+// camera's. That happens to come out right when both the build machine and
+// the photo were effectively on the same calendar day in UTC (true for CI,
+// which runs in UTC), but is wrong in general and would silently shift a
+// photo taken near local midnight to the wrong day on a non-UTC machine.
+// Reading the raw string and slicing its date portion sidesteps Date/timezone
+// conversion entirely, the same way the GPX pipeline slices explicit UTC ISO
+// strings instead of round-tripping them through a Date.
+function exifDateKey(raw: string): string {
+  return raw.slice(0, 10).replace(/:/g, '-');
+}
+
 // Reads every .jpg/.jpeg under the trip's `jpg/` folder and groups them by
 // the calendar date in their own EXIF "date taken" tag — not the file's
 // modify date, which for Lightroom-exported files reflects export time, not
@@ -139,9 +154,9 @@ async function loadPhotosByDate(): Promise<Map<string, ImageMetadata[]>> {
   await Promise.all(
     filenames.map(async (filename) => {
       const absPath = path.join(jpgDir, filename);
-      const exif = await exifr.parse(absPath, ['DateTimeOriginal', 'CreateDate']);
-      const taken: Date | undefined = exif?.DateTimeOriginal ?? exif?.CreateDate;
-      if (!taken) {
+      const exif = await exifr.parse(absPath, { pick: ['DateTimeOriginal', 'CreateDate'], reviveValues: false });
+      const raw: string | undefined = exif?.DateTimeOriginal ?? exif?.CreateDate;
+      if (!raw) {
         console.warn(`${filename}: no DateTimeOriginal/CreateDate EXIF tag, skipping`);
         return;
       }
@@ -151,7 +166,7 @@ async function loadPhotosByDate(): Promise<Map<string, ImageMetadata[]>> {
         console.warn(`${filename}: not found among globbed image assets, skipping`);
         return;
       }
-      const key = dateKey(taken);
+      const key = exifDateKey(raw);
       if (!byDate.has(key)) byDate.set(key, []);
       byDate.get(key)!.push(image);
     }),
@@ -161,6 +176,23 @@ async function loadPhotosByDate(): Promise<Map<string, ImageMetadata[]>> {
 }
 
 const photosByDate = await loadPhotosByDate();
+
+// Every other failure mode in this pipeline fails loud at build time
+// (malformed GPX, a missing EXIF tag, a file absent from the glob) — a
+// matched-to-nothing date would otherwise be the one way a file silently
+// vanishes from the site instead, e.g. a mistyped frontmatter `date:` or a
+// camera clock set to the wrong day.
+const dayDateKeys = new Set(days.map((day) => dateKey(day.date)));
+for (const [key, entries] of activityTracksByDate) {
+  if (!dayDateKeys.has(key)) {
+    console.warn(`gpx/: ${entries.length} track(s) dated ${key} match no day in this trip's frontmatter`);
+  }
+}
+for (const [key, images] of photosByDate) {
+  if (!dayDateKeys.has(key)) {
+    console.warn(`jpg/: ${images.length} photo(s) dated ${key} match no day in this trip's frontmatter`);
+  }
+}
 
 async function loadPhotos(images: ImageMetadata[]) {
   return Promise.all(
