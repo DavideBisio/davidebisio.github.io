@@ -1,5 +1,6 @@
 ---
 import Layout from './Layout.astro';
+import { profile } from '../data/cv';
 
 interface Props {
   title: string;
@@ -13,9 +14,19 @@ interface Props {
 
 const { title, description, pubDate, updatedDate, backHref, backLabel, tags } = Astro.props;
 const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  ...(updatedDate && { dateModified: updatedDate.toISOString() }),
+  author: { '@type': 'Person', name: profile.name },
+};
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} type="article" structuredData={structuredData}>
   <article>
     <header class="mb-8">
       <a href={backHref} class="text-sm font-medium text-sky-600 dark:text-sky-400">

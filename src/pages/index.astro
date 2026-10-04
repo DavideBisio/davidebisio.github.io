@@ -7,9 +7,19 @@ import { articleSlug } from '../lib/articles';
 const latestArticles = (await getCollection('articles', ({ data }) => !data.draft && data.category === 'professional'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
+const siteUrl = new URL('/', Astro.site).toString();
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  jobTitle: profile.title,
+  description: profile.summary,
+  url: siteUrl,
+};
 ---
 
-<Layout title={profile.name} description={profile.summary}>
+<Layout title={profile.name} description={profile.summary} structuredData={structuredData}>
   <section class="mb-16">
     <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{profile.name}</h1>
     <p class="mt-2 text-lg text-slate-600 dark:text-slate-400">{profile.title}</p>
