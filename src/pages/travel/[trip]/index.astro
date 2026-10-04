@@ -7,8 +7,7 @@ import exifr from 'exifr';
 import Layout from '../../../layouts/Layout.astro';
 import DayFocusMap from '../../../components/DayFocusMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
-import { parseGpx, parseTracks, parseWaypoints, buildGpxFile, haversineKm } from '../../../lib/gpx';
-import type { JourneyDay, JourneyTrack } from '../../../lib/journey';
+import { loadJourney, dateKey } from '../../../lib/loadJourney';
 import { renderNotesHtml } from '../../../lib/notes';
 import { tripSlug, sortDaysByDate } from '../../../lib/trips';
 
@@ -23,106 +22,24 @@ export async function getStaticPaths() {
 const { trip } = Astro.props as { trip: CollectionEntry<'trips'> };
 const { Content } = await render(trip);
 const days = sortDaysByDate(trip.data.days);
+const slug = tripSlug(trip);
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-function labelFromFilename(filename: string): string {
-  const base = filename.split('/').pop()!.replace(/\.gpx$/i, '');
-  return base.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function dateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function trackDateLabel(date: Date): string {
-  const dd = String(date.getUTCDate()).padStart(2, '0');
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${date.getUTCFullYear()}`;
-}
-
 const tripDir = trip.filePath ? path.posix.dirname(trip.filePath) : null;
 const tripDirAbs = tripDir ? path.join(process.cwd(), tripDir) : null;
-
-// GPX files are colocated with the trip's markdown but aren't part of the
-// schema's markdown/image pipeline, so resolve + parse them at build time.
-const gpxUrls = import.meta.glob('/src/content/trips/**/gpx/*.gpx', {
-  query: '?url',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
 
 const imageModules = import.meta.glob('/src/content/trips/**/jpg/*.{jpg,jpeg}', {
   eager: true,
   import: 'default',
 }) as Record<string, ImageMetadata>;
 
-interface ActivityTrackEntry {
-  label: string;
-  track: ReturnType<typeof parseGpx>;
-  href: string | null;
-}
-
-interface RouteFile {
-  routeTracks: ReturnType<typeof parseTracks>;
-  waypoints: ReturnType<typeof parseWaypoints>;
-}
-
-interface RouteDownload {
-  track: ReturnType<typeof parseGpx>;
-  href: string;
-  filename: string;
-}
-
-// A waypoint counts as "on" a day if it's within this distance of that day's
-// own tracks — picked empirically from the real trip data: every waypoint's
-// nearest matching day's track is within ~3.4km, while the next-nearest
-// unrelated day is always 5km+ away, so this sits squarely in the gap.
-const WAYPOINT_RADIUS_KM = 3.5;
-
-// Reads every .gpx file under the trip's `gpx/` folder. A filename ending in
-// "-route.gpx" is the trip's single combined routes+waypoints file (one
-// <trk> per day, named "Route DD/MM/YYYY", plus shared <wpt> waypoints).
-// Every other file is a per-day activity track, matched to its day by the
-// date embedded in its own points — not by filename — so files can be named
-// freely (the import script names them after the activity).
-function loadGpxFiles(): { activityTracksByDate: Map<string, ActivityTrackEntry[]>; routeFile: RouteFile | null } {
-  const activityTracksByDate = new Map<string, ActivityTrackEntry[]>();
-  let routeFile: RouteFile | null = null;
-  if (!tripDirAbs || !tripDir) return { activityTracksByDate, routeFile };
-
-  const gpxDir = path.join(tripDirAbs, 'gpx');
-  if (!fs.existsSync(gpxDir)) return { activityTracksByDate, routeFile };
-
-  for (const filename of fs.readdirSync(gpxDir)) {
-    if (!filename.toLowerCase().endsWith('.gpx')) continue;
-    const xml = fs.readFileSync(path.join(gpxDir, filename), 'utf-8');
-
-    if (filename.toLowerCase().endsWith('-route.gpx')) {
-      routeFile = { routeTracks: parseTracks(xml), waypoints: parseWaypoints(xml) };
-      continue;
-    }
-
-    const track = parseGpx(xml);
-    if (!track.startTime) throw new Error(`${filename}: no <time> on its points, can't match it to a day`);
-    const relPath = path.posix.join(tripDir, 'gpx', filename);
-    const entry: ActivityTrackEntry = {
-      label: labelFromFilename(filename),
-      track,
-      href: gpxUrls[`/${relPath}`] ?? null,
-    };
-    const key = track.startTime.slice(0, 10);
-    if (!activityTracksByDate.has(key)) activityTracksByDate.set(key, []);
-    activityTracksByDate.get(key)!.push(entry);
-  }
-  for (const entries of activityTracksByDate.values()) {
-    entries.sort((a, b) => (a.track.startTime ?? '').localeCompare(b.track.startTime ?? ''));
-  }
-  return { activityTracksByDate, routeFile };
-}
-
-const { activityTracksByDate, routeFile } = loadGpxFiles();
+// activityTracksByDate/journeyDays are built once here from gpx/, shared with
+// the journey/[day].json and route/[day].gpx endpoints that serve the
+// per-day map data and route downloads from their own static URLs instead of
+// this page embedding them — see the <DayFocusMap> mount below for why.
+const { activityTracksByDate, routeDownloads, journeyDays } = loadJourney(trip);
 
 // EXIF date tags have no timezone — they're the camera's local wall-clock
 // time, formatted "YYYY:MM:DD HH:MM:SS". Reading them with exifr's default
@@ -212,51 +129,6 @@ const dayExtras = await Promise.all(
     };
   }),
 );
-
-// Indexed by day index, independent of the journey map: the per-day route
-// download link is shown in each day's description whether or not the trip
-// has a journey map at all.
-const routeDownloads: (RouteDownload | null)[] = days.map((day) => {
-  if (!routeFile) return null;
-  const routeName = `Route ${trackDateLabel(day.date)}`;
-  const routeTrack = routeFile.routeTracks.find((t) => t.name === routeName && t.points.length > 0);
-  if (!routeTrack) return null;
-  const gpxXml = buildGpxFile(routeName, routeTrack.points);
-  return {
-    track: routeTrack,
-    href: `data:application/gpx+xml;base64,${Buffer.from(gpxXml).toString('base64')}`,
-    filename: `route-${day.date.toISOString().slice(0, 10)}.gpx`,
-  };
-});
-
-function waypointsNearDay(points: [number, number][]) {
-  if (!routeFile) return [];
-  return routeFile.waypoints.filter((wpt) =>
-    points.some(([lat, lon]) => haversineKm({ lat, lon }, wpt) <= WAYPOINT_RADIUS_KM),
-  );
-}
-
-const journeyDays: JourneyDay[] = days
-  .map((day, i): JourneyDay => {
-    const tracks: JourneyTrack[] = dayExtras[i].tracks.map((entry) => ({
-      label: entry.label,
-      points: entry.track.points.map((p) => [p.lat, p.lon] as [number, number]),
-      variant: 'activity' as const,
-    }));
-
-    const routeDownload = routeDownloads[i];
-    if (routeDownload) {
-      tracks.push({
-        label: routeDownload.track.name ?? 'Route',
-        points: routeDownload.track.points.map((p) => [p.lat, p.lon] as [number, number]),
-        variant: 'route',
-      });
-    }
-
-    const dayPoints = tracks.flatMap((t) => t.points);
-    return { dayIndex: i, label: day.title, tracks, waypoints: waypointsNearDay(dayPoints) };
-  })
-  .filter((d) => d.tracks.some((t) => t.points.length > 0));
 
 const hasJourney = journeyDays.length > 0;
 ---
@@ -368,7 +240,7 @@ const hasJourney = journeyDays.length > 0;
             {routeDownloads[i] && (
               <div class="mt-4">
                 <a
-                  href={routeDownloads[i]!.href}
+                  href={`/travel/${slug}/route/${routeDownloads[i]!.dateStr}.gpx`}
                   download={routeDownloads[i]!.filename}
                   class="inline-block text-sm font-medium text-sky-600 dark:text-sky-400"
                 >
@@ -384,7 +256,16 @@ const hasJourney = journeyDays.length > 0;
 
     {hasJourney && (
       <div class="lg:sticky lg:top-6">
-        <DayFocusMap client:load days={journeyDays} />
+        {
+          /* Only {dayIndex, label} goes into this page's hydration payload —
+          each day's full track/waypoint data (tens of thousands of points for
+          a multi-week trip) is fetched client-side from journey/[day].json
+          instead. Measured before this change: embedding journeyDays
+          directly here made this one page 4.8MB, 99% of it GPX point data
+          duplicated into a client prop that only ever renders one day at a
+          time. */
+        }
+        <DayFocusMap client:load days={journeyDays.map((d) => ({ dayIndex: d.dayIndex, label: d.label }))} tripSlug={slug} />
       </div>
     )}
   </div>
