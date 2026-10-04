@@ -14,4 +14,36 @@ const articles = defineCollection({
   }),
 });
 
-export const collections = { articles };
+// One comprehensive file per trip: `<slug>/<slug>.md`, with all days as a
+// frontmatter array. GPX tracks live under `<slug>/gpx/` and pictures under
+// `<slug>/jpg/`, both auto-discovered and matched to a day at build time
+// (see src/pages/travel/[trip]/index.astro) — no per-day filename lists in
+// this frontmatter.
+const trips = defineCollection({
+  loader: glob({ pattern: '*/*.{md,mdx}', base: './src/content/trips' }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      startDate: z.coerce.date(),
+      endDate: z.coerce.date(),
+      location: z.string(),
+      country: z.string().optional(),
+      coverImage: image().optional(),
+      tags: z.array(z.string()).default([]),
+      draft: z.boolean().default(false),
+      days: z
+        .array(
+          z.object({
+            date: z.coerce.date(),
+            title: z.string(),
+            places: z.array(z.string()).default([]),
+            activities: z.array(z.string()).default([]),
+            notes: z.string().optional(),
+          }),
+        )
+        .default([]),
+    }),
+});
+
+export const collections = { articles, trips };

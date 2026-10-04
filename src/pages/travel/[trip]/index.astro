@@ -1,0 +1,274 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
+import path from 'node:path';
+import fs from 'node:fs';
+import exifr from 'exifr';
+import Layout from '../../../layouts/Layout.astro';
+import DayFocusMap from '../../../components/DayFocusMap.tsx';
+import Lightbox from '../../../components/Lightbox.astro';
+import { loadJourney, dateKey } from '../../../lib/loadJourney';
+import { renderNotesHtml } from '../../../lib/notes';
+import { tripSlug, sortDaysByDate } from '../../../lib/trips';
+
+export async function getStaticPaths() {
+  const trips = await getCollection('trips', ({ data }) => !data.draft);
+  return trips.map((trip) => ({
+    params: { trip: tripSlug(trip) },
+    props: { trip },
+  }));
+}
+
+const { trip } = Astro.props as { trip: CollectionEntry<'trips'> };
+const { Content } = await render(trip);
+const days = sortDaysByDate(trip.data.days);
+const slug = tripSlug(trip);
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+const tripDir = trip.filePath ? path.posix.dirname(trip.filePath) : null;
+const tripDirAbs = tripDir ? path.join(process.cwd(), tripDir) : null;
+
+const imageModules = import.meta.glob('/src/content/trips/**/jpg/*.{jpg,jpeg}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, ImageMetadata>;
+
+// activityTracksByDate/journeyDays are built once here from gpx/, shared with
+// the journey/[day].json and route/[day].gpx endpoints that serve the
+// per-day map data and route downloads from their own static URLs instead of
+// this page embedding them — see the <DayFocusMap> mount below for why.
+const { activityTracksByDate, routeDownloads, journeyDays } = loadJourney(trip);
+
+// EXIF date tags have no timezone — they're the camera's local wall-clock
+// time, formatted "YYYY:MM:DD HH:MM:SS". Reading them with exifr's default
+// value revival round-trips them through a JS Date, which interprets that
+// naive string as being in *this process's* local timezone, not the
+// camera's. That happens to come out right when both the build machine and
+// the photo were effectively on the same calendar day in UTC (true for CI,
+// which runs in UTC), but is wrong in general and would silently shift a
+// photo taken near local midnight to the wrong day on a non-UTC machine.
+// Reading the raw string and slicing its date portion sidesteps Date/timezone
+// conversion entirely, the same way the GPX pipeline slices explicit UTC ISO
+// strings instead of round-tripping them through a Date.
+function exifDateKey(raw: string): string {
+  return raw.slice(0, 10).replace(/:/g, '-');
+}
+
+// Reads every .jpg/.jpeg under the trip's `jpg/` folder and groups them by
+// the calendar date in their own EXIF "date taken" tag — not the file's
+// modify date, which for Lightroom-exported files reflects export time, not
+// capture time.
+async function loadPhotosByDate(): Promise<Map<string, ImageMetadata[]>> {
+  const byDate = new Map<string, ImageMetadata[]>();
+  if (!tripDirAbs || !tripDir) return byDate;
+
+  const jpgDir = path.join(tripDirAbs, 'jpg');
+  if (!fs.existsSync(jpgDir)) return byDate;
+
+  const filenames = fs.readdirSync(jpgDir).filter((f) => /\.jpe?g$/i.test(f));
+  await Promise.all(
+    filenames.map(async (filename) => {
+      const absPath = path.join(jpgDir, filename);
+      const exif = await exifr.parse(absPath, { pick: ['DateTimeOriginal', 'CreateDate'], reviveValues: false });
+      const raw: string | undefined = exif?.DateTimeOriginal ?? exif?.CreateDate;
+      if (!raw) {
+        console.warn(`${filename}: no DateTimeOriginal/CreateDate EXIF tag, skipping`);
+        return;
+      }
+      const relPath = path.posix.join(tripDir!, 'jpg', filename);
+      const image = imageModules[`/${relPath}`];
+      if (!image) {
+        console.warn(`${filename}: not found among globbed image assets, skipping`);
+        return;
+      }
+      const key = exifDateKey(raw);
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(image);
+    }),
+  );
+  for (const images of byDate.values()) images.sort((a, b) => a.src.localeCompare(b.src));
+  return byDate;
+}
+
+const photosByDate = await loadPhotosByDate();
+
+// Every other failure mode in this pipeline fails loud at build time
+// (malformed GPX, a missing EXIF tag, a file absent from the glob) — a
+// matched-to-nothing date would otherwise be the one way a file silently
+// vanishes from the site instead, e.g. a mistyped frontmatter `date:` or a
+// camera clock set to the wrong day.
+const dayDateKeys = new Set(days.map((day) => dateKey(day.date)));
+for (const [key, entries] of activityTracksByDate) {
+  if (!dayDateKeys.has(key)) {
+    console.warn(`gpx/: ${entries.length} track(s) dated ${key} match no day in this trip's frontmatter`);
+  }
+}
+for (const [key, images] of photosByDate) {
+  if (!dayDateKeys.has(key)) {
+    console.warn(`jpg/: ${images.length} photo(s) dated ${key} match no day in this trip's frontmatter`);
+  }
+}
+
+async function loadPhotos(images: ImageMetadata[]) {
+  return Promise.all(
+    images.map(async (img) => ({
+      thumb: await getImage({ src: img, width: 200, height: 150 }),
+      full: await getImage({ src: img, width: 1600 }),
+    })),
+  );
+}
+
+const dayExtras = await Promise.all(
+  days.map(async (day) => {
+    const key = dateKey(day.date);
+    return {
+      tracks: activityTracksByDate.get(key) ?? [],
+      photos: await loadPhotos(photosByDate.get(key) ?? []),
+    };
+  }),
+);
+
+const hasJourney = journeyDays.length > 0;
+---
+
+<Layout title={trip.data.title} description={trip.data.description} wide={hasJourney} snapScroll={hasJourney}>
+  <a href="/travel/" class="text-sm font-medium text-sky-600 dark:text-sky-400">Travel log</a>
+
+  <header class="mt-2 mb-8">
+    <h1 class="text-3xl font-bold tracking-tight">{trip.data.title}</h1>
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+      <span>
+        {dateFormatter.format(trip.data.startDate)} – {dateFormatter.format(trip.data.endDate)}
+      </span>
+      <span>
+        {trip.data.location}
+        {trip.data.country ? `, ${trip.data.country}` : ''}
+      </span>
+      {trip.data.tags.length > 0 && <span>{trip.data.tags.map((t) => `#${t}`).join(' ')}</span>}
+    </div>
+  </header>
+
+  <div class="prose prose-slate max-w-none dark:prose-invert">
+    <Content />
+  </div>
+
+  {days.length > 0 && <h2 class="mt-10 mb-6 text-lg font-semibold tracking-tight">Days</h2>}
+
+  <div class:list={['gap-8', hasJourney && 'lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start']}>
+    <ol class="relative space-y-10 border-l border-slate-200 pl-6 dark:border-slate-800">
+    {
+      days.map((day, i) => {
+        const { tracks, photos } = dayExtras[i];
+        return (
+          <li
+            class:list={['relative', hasJourney && 'snap-start']}
+            data-day-index={hasJourney ? i : undefined}
+          >
+            <span class="absolute -left-[1.6rem] top-1.5 h-2.5 w-2.5 rounded-full bg-sky-600 dark:bg-sky-400" />
+
+            <time class="text-sm text-slate-500 dark:text-slate-400">{dayFormatter.format(day.date)}</time>
+            <h3 class="text-xl font-semibold tracking-tight">{day.title}</h3>
+
+            {day.places.length > 0 && (
+              <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{day.places.join(' · ')}</p>
+            )}
+
+            {day.activities.length > 0 && (
+              <ul class="mt-3 flex flex-wrap gap-2">
+                {day.activities.map((activity) => (
+                  <li class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {activity}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {day.notes && (
+              <div class="prose prose-slate mt-4 max-w-none dark:prose-invert" set:html={renderNotesHtml(day.notes)} />
+            )}
+
+            {photos.length > 0 && (
+              <div class="mt-4 flex flex-wrap gap-2">
+                {photos.map(({ thumb, full }) => (
+                  <button
+                    type="button"
+                    data-lightbox-full={full.src}
+                    data-lightbox-alt={day.title}
+                    class="block overflow-hidden rounded-md border border-slate-200 dark:border-slate-800"
+                  >
+                    <img src={thumb.src} {...thumb.attributes} alt={day.title} class="h-24 w-32 object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {tracks.map((entry) => (
+              <div class="mt-4">
+                {tracks.length > 1 && <p class="mb-2 text-sm font-medium">{entry.label}</p>}
+                <dl class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Distance</dt>
+                    <dd class="font-medium">{entry.track.distanceKm.toFixed(1)} km</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Elevation gain</dt>
+                    <dd class="font-medium">{Math.round(entry.track.elevationGainM)} m</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500 dark:text-slate-400">Elevation loss</dt>
+                    <dd class="font-medium">{Math.round(entry.track.elevationLossM)} m</dd>
+                  </div>
+                  {entry.track.durationMinutes !== null && (
+                    <div>
+                      <dt class="text-slate-500 dark:text-slate-400">Duration</dt>
+                      <dd class="font-medium">
+                        {Math.floor(entry.track.durationMinutes / 60)}h {Math.round(entry.track.durationMinutes % 60)}m
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+                {entry.href && (
+                  <a href={entry.href} download class="mt-4 inline-block text-sm font-medium text-sky-600 dark:text-sky-400">
+                    Download activity GPX
+                  </a>
+                )}
+              </div>
+            ))}
+
+            {routeDownloads[i] && (
+              <div class="mt-4">
+                <a
+                  href={`/travel/${slug}/route/${routeDownloads[i]!.dateStr}.gpx`}
+                  download={routeDownloads[i]!.filename}
+                  class="inline-block text-sm font-medium text-sky-600 dark:text-sky-400"
+                >
+                  Download route GPX
+                </a>
+              </div>
+            )}
+          </li>
+        );
+      })
+    }
+    </ol>
+
+    {hasJourney && (
+      <div class="lg:sticky lg:top-6">
+        {
+          /* Only {dayIndex, label} goes into this page's hydration payload —
+          each day's full track/waypoint data (tens of thousands of points for
+          a multi-week trip) is fetched client-side from journey/[day].json
+          instead. Measured before this change: embedding journeyDays
+          directly here made this one page 4.8MB, 99% of it GPX point data
+          duplicated into a client prop that only ever renders one day at a
+          time. */
+        }
+        <DayFocusMap client:load days={journeyDays.map((d) => ({ dayIndex: d.dayIndex, label: d.label }))} tripSlug={slug} />
+      </div>
+    )}
+  </div>
+
+  <Lightbox />
+</Layout>

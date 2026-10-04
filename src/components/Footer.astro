@@ -1,10 +1,14 @@
 ---
 import { profile } from '../data/cv';
+interface Props {
+  wide?: boolean;
+}
+const { wide = false } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
 <footer class="mt-16 border-t border-slate-200 py-8 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-  <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 px-4">
+  <div class:list={['mx-auto flex flex-wrap items-center justify-between gap-4 px-4', wide ? 'max-w-6xl' : 'max-w-3xl']}>
     <p>&copy; {year} {profile.name}</p>
     <ul class="flex gap-4">
       {

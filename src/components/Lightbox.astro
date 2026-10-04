@@ -1,0 +1,63 @@
+---
+// Shared overlay for image previews. Any element with `data-lightbox-full`
+// (and optionally `data-lightbox-alt`) opens it on click — include this
+// component once per page. Dependency-free vanilla JS, no framework island.
+---
+
+<div
+  id="lightbox-overlay"
+  class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/85 p-4"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+>
+  <button
+    type="button"
+    id="lightbox-close"
+    class="absolute right-4 top-4 text-3xl leading-none text-white/80 hover:text-white"
+    aria-label="Close"
+  >
+    &times;
+  </button>
+  <img id="lightbox-image" src="" alt="" class="max-h-full max-w-full rounded-lg object-contain" />
+</div>
+
+<script>
+  const overlay = document.getElementById('lightbox-overlay');
+  const image = document.getElementById('lightbox-image') as HTMLImageElement | null;
+  const closeButton = document.getElementById('lightbox-close');
+
+  function openLightbox(src: string, alt: string) {
+    if (!overlay || !image) return;
+    image.src = src;
+    image.alt = alt;
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    if (!overlay || !image) return;
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    image.src = '';
+  }
+
+  document.addEventListener('click', (event) => {
+    const trigger = (event.target as HTMLElement).closest<HTMLElement>('[data-lightbox-full]');
+    if (trigger) {
+      openLightbox(trigger.dataset.lightboxFull!, trigger.dataset.lightboxAlt ?? '');
+    }
+  });
+
+  closeButton?.addEventListener('click', closeLightbox);
+  overlay?.addEventListener('click', (event) => {
+    if (event.target === overlay) closeLightbox();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeLightbox();
+  });
+</script>

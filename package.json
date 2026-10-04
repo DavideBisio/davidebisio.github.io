@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/generate-cv-pdf.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "import-gpx": "node scripts/import-gpx-tracks.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",
@@ -20,6 +21,8 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "astro": "^7.3.1",
+    "exifr": "^7.1.3",
+    "leaflet": "^1.9.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3"
@@ -30,6 +33,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",
+    "@types/leaflet": "^1.9.22",
     "puppeteer": "^25.10.0"
   }
 }

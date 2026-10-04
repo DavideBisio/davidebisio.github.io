@@ -16,3 +16,10 @@ body {
 ::selection {
   @apply bg-sky-200 text-slate-900;
 }
+
+/* Gives the journey map's tiles a coarser, lower-contrast look than the
+   full-detail per-day activity maps, without needing a separate (and, as it
+   turned out, unreliable) third-party tile source. */
+.journey-map-tiles .leaflet-tile-pane {
+  filter: grayscale(55%) contrast(92%) brightness(1.05);
+}
