@@ -3,13 +3,14 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { getImage } from 'astro:assets';
 import path from 'node:path';
 import fs from 'node:fs';
+import exifr from 'exifr';
 import Layout from '../../../layouts/Layout.astro';
 import DayFocusMap from '../../../components/DayFocusMap.tsx';
 import Lightbox from '../../../components/Lightbox.astro';
 import { parseGpx, parseTracks, parseWaypoints, buildGpxFile, haversineKm } from '../../../lib/gpx';
 import type { JourneyDay, JourneyTrack } from '../../../lib/journey';
 import { renderNotesHtml } from '../../../lib/notes';
-import { tripSlug, sortDaysByDate, type TripDay } from '../../../lib/trips';
+import { tripSlug, sortDaysByDate } from '../../../lib/trips';
 
 export async function getStaticPaths() {
   const trips = await getCollection('trips', ({ data }) => !data.draft);
@@ -31,48 +32,41 @@ function labelFromFilename(filename: string): string {
   return base.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// GPX files are colocated with the trip's markdown but aren't part of the
-// schema's markdown/image pipeline, so resolve + parse them at build time.
-const gpxUrls = import.meta.glob('/src/content/trips/**/*.gpx', {
-  query: '?url',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-
-async function loadTracks(day: TripDay) {
-  if (!trip.filePath) return [];
-  const tripDir = path.posix.dirname(trip.filePath);
-  return day.gpx.map((gpxFile) => {
-    const gpxRelPath = path.posix.join(tripDir, gpxFile.replace(/^\.\//, ''));
-    const xml = fs.readFileSync(path.join(process.cwd(), gpxRelPath), 'utf-8');
-    return {
-      label: labelFromFilename(gpxFile),
-      track: parseGpx(xml),
-      href: gpxUrls[`/${gpxRelPath}`] ?? null,
-    };
-  });
+function dateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
-
-async function loadPhotos(day: TripDay) {
-  return Promise.all(
-    day.images.map(async (img) => ({
-      thumb: await getImage({ src: img, width: 200, height: 150 }),
-      full: await getImage({ src: img, width: 1600 }),
-    })),
-  );
-}
-
-const dayExtras = await Promise.all(
-  days.map(async (day) => ({
-    tracks: await loadTracks(day),
-    photos: await loadPhotos(day),
-  })),
-);
 
 function trackDateLabel(date: Date): string {
   const dd = String(date.getUTCDate()).padStart(2, '0');
   const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
   return `${dd}/${mm}/${date.getUTCFullYear()}`;
+}
+
+const tripDir = trip.filePath ? path.posix.dirname(trip.filePath) : null;
+const tripDirAbs = tripDir ? path.join(process.cwd(), tripDir) : null;
+
+// GPX files are colocated with the trip's markdown but aren't part of the
+// schema's markdown/image pipeline, so resolve + parse them at build time.
+const gpxUrls = import.meta.glob('/src/content/trips/**/gpx/*.gpx', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const imageModules = import.meta.glob('/src/content/trips/**/jpg/*.{jpg,jpeg}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, ImageMetadata>;
+
+interface ActivityTrackEntry {
+  label: string;
+  track: ReturnType<typeof parseGpx>;
+  href: string | null;
+}
+
+interface RouteFile {
+  routeTracks: ReturnType<typeof parseTracks>;
+  waypoints: ReturnType<typeof parseWaypoints>;
 }
 
 interface RouteDownload {
@@ -87,18 +81,105 @@ interface RouteDownload {
 // unrelated day is always 5km+ away, so this sits squarely in the gap.
 const WAYPOINT_RADIUS_KM = 3.5;
 
-// Loads the trip's single combined routes+waypoints file (if any). Tracks are
-// matched to days by date elsewhere; waypoints have no day of their own, so
-// they're filtered to each day's own tracks by proximity instead.
-function loadRouteFile() {
-  if (!trip.data.routesGpx || !trip.filePath) return null;
-  const tripDir = path.posix.dirname(trip.filePath);
-  const routesRelPath = path.posix.join(tripDir, trip.data.routesGpx.replace(/^\.\//, ''));
-  const xml = fs.readFileSync(path.join(process.cwd(), routesRelPath), 'utf-8');
-  return { routeTracks: parseTracks(xml), waypoints: parseWaypoints(xml) };
+// Reads every .gpx file under the trip's `gpx/` folder. A filename ending in
+// "-route.gpx" is the trip's single combined routes+waypoints file (one
+// <trk> per day, named "Route DD/MM/YYYY", plus shared <wpt> waypoints).
+// Every other file is a per-day activity track, matched to its day by the
+// date embedded in its own points — not by filename — so files can be named
+// freely (the import script names them after the activity).
+function loadGpxFiles(): { activityTracksByDate: Map<string, ActivityTrackEntry[]>; routeFile: RouteFile | null } {
+  const activityTracksByDate = new Map<string, ActivityTrackEntry[]>();
+  let routeFile: RouteFile | null = null;
+  if (!tripDirAbs || !tripDir) return { activityTracksByDate, routeFile };
+
+  const gpxDir = path.join(tripDirAbs, 'gpx');
+  if (!fs.existsSync(gpxDir)) return { activityTracksByDate, routeFile };
+
+  for (const filename of fs.readdirSync(gpxDir)) {
+    if (!filename.toLowerCase().endsWith('.gpx')) continue;
+    const xml = fs.readFileSync(path.join(gpxDir, filename), 'utf-8');
+
+    if (filename.toLowerCase().endsWith('-route.gpx')) {
+      routeFile = { routeTracks: parseTracks(xml), waypoints: parseWaypoints(xml) };
+      continue;
+    }
+
+    const track = parseGpx(xml);
+    if (!track.startTime) throw new Error(`${filename}: no <time> on its points, can't match it to a day`);
+    const relPath = path.posix.join(tripDir, 'gpx', filename);
+    const entry: ActivityTrackEntry = {
+      label: labelFromFilename(filename),
+      track,
+      href: gpxUrls[`/${relPath}`] ?? null,
+    };
+    const key = track.startTime.slice(0, 10);
+    if (!activityTracksByDate.has(key)) activityTracksByDate.set(key, []);
+    activityTracksByDate.get(key)!.push(entry);
+  }
+  for (const entries of activityTracksByDate.values()) {
+    entries.sort((a, b) => (a.track.startTime ?? '').localeCompare(b.track.startTime ?? ''));
+  }
+  return { activityTracksByDate, routeFile };
 }
 
-const routeFile = loadRouteFile();
+const { activityTracksByDate, routeFile } = loadGpxFiles();
+
+// Reads every .jpg/.jpeg under the trip's `jpg/` folder and groups them by
+// the calendar date in their own EXIF "date taken" tag — not the file's
+// modify date, which for Lightroom-exported files reflects export time, not
+// capture time.
+async function loadPhotosByDate(): Promise<Map<string, ImageMetadata[]>> {
+  const byDate = new Map<string, ImageMetadata[]>();
+  if (!tripDirAbs || !tripDir) return byDate;
+
+  const jpgDir = path.join(tripDirAbs, 'jpg');
+  if (!fs.existsSync(jpgDir)) return byDate;
+
+  const filenames = fs.readdirSync(jpgDir).filter((f) => /\.jpe?g$/i.test(f));
+  await Promise.all(
+    filenames.map(async (filename) => {
+      const absPath = path.join(jpgDir, filename);
+      const exif = await exifr.parse(absPath, ['DateTimeOriginal', 'CreateDate']);
+      const taken: Date | undefined = exif?.DateTimeOriginal ?? exif?.CreateDate;
+      if (!taken) {
+        console.warn(`${filename}: no DateTimeOriginal/CreateDate EXIF tag, skipping`);
+        return;
+      }
+      const relPath = path.posix.join(tripDir!, 'jpg', filename);
+      const image = imageModules[`/${relPath}`];
+      if (!image) {
+        console.warn(`${filename}: not found among globbed image assets, skipping`);
+        return;
+      }
+      const key = dateKey(taken);
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(image);
+    }),
+  );
+  for (const images of byDate.values()) images.sort((a, b) => a.src.localeCompare(b.src));
+  return byDate;
+}
+
+const photosByDate = await loadPhotosByDate();
+
+async function loadPhotos(images: ImageMetadata[]) {
+  return Promise.all(
+    images.map(async (img) => ({
+      thumb: await getImage({ src: img, width: 200, height: 150 }),
+      full: await getImage({ src: img, width: 1600 }),
+    })),
+  );
+}
+
+const dayExtras = await Promise.all(
+  days.map(async (day) => {
+    const key = dateKey(day.date);
+    return {
+      tracks: activityTracksByDate.get(key) ?? [],
+      photos: await loadPhotos(photosByDate.get(key) ?? []),
+    };
+  }),
+);
 
 // Indexed by day index, independent of the journey map: the per-day route
 // download link is shown in each day's description whether or not the trip

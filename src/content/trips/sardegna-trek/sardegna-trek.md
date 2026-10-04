@@ -7,7 +7,6 @@ location: "Sardegna"
 country: "Italy"
 tags: ["trekking", "vanlife", "sardinia", "italy"]
 draft: false
-routesGpx: "./sardegna-trek-2026-drive.gpx"
 days:
   - date: 2026-09-11
     title: "Drive and boat towards Sardinia"
@@ -35,8 +34,6 @@ days:
     title: "Punta Corrasi hike"
     places: ["Oliena", "Punta Corrasi"]
     activities: ["Hiking to Punta Corrasi"]
-    gpx:
-      - "./hiking-to-punta-corrasi.gpx"
     notes: |
       Hiking to Punta Corrasi: awesome panoramic view from there. No particular notes
       about this path, it's well signposted, except that the majority of the trail
@@ -48,8 +45,6 @@ days:
     title: "Punta Cusidore hike"
     places: ["Oliena", "Punta Cusidore", "Orgoi", "Su Golgone"]
     activities: ["Hiking to Punta Cusidore"]
-    gpx:
-      - "./hiking-to-punta-cusidore.gpx"
     notes: |
       Hiking to Punta Cusidore: the same initial path as the day before, now turning left
       on a sun exposed high plane, with many caves and ancient sheepfolds. The path is
@@ -62,8 +57,6 @@ days:
     title: "Fruncu Nieddu hike"
     places: ["Su Golgone", "Ovile Biseddu", "Fruncu Nieddu", "Sovana"]
     activities: ["Hiking to Fruncu Nieddu"]
-    gpx:
-      - "./hiking-to-fruncu-nieddu.gpx"
     notes: |
       Hiking to Fruncu Nieddu: starting from Su Golgone, I first headed to Ovile Biseddu.
       After that point the path is extremely steep and difficult up to the summit of
@@ -76,8 +69,6 @@ days:
     title: "Tiscali"
     places: ["Tiscali", "Sa Oche cave", "Su Sedda 'e sos Larros", "Corbeddu cave", "Gorropu", "Fonni"]
     activities: ["Hiking to Tiscali village", "Visit Lanaitho"]
-    gpx:
-      - "./hiking-to-tiscali-village.gpx"
     notes: |
       I moved to Lanaitho ticket sales point, from where I started my hike to Tiscali
       village. The trail is well signposted. Great view from the summit, near the village.
@@ -90,8 +81,6 @@ days:
     title: "Punta la Marmora hike"
     places: ["Fonni", "Bruncu Spina", "Punta la Marmora"]
     activities: ["Hiking to Punta la Marmora"]
-    gpx:
-      - "./hiking-to-punta-la-marmora.gpx"
     notes: |
       In the morning I moved to the abandoned ski lift at Bruncu Spina, from where I
       started my hike to Punta la Marmora. This is the highest summit of the island, from
@@ -102,8 +91,6 @@ days:
     title: "Exploration hike"
     places: ["Bruncu Spina", "Nuoro"]
     activities: ["Exploration hike around Bruncu Spina"]
-    gpx:
-      - "./exploration-hike-around-bruncu-spina.gpx"
     notes: |
       Since that place was awesome, I spent the morning hiking around Bruncu Spinca. I
       explored few more trails, looking for great landscapes to see. I needed to move to
@@ -113,8 +100,6 @@ days:
     title: "Ortobene and Redentore"
     places: ["Nuoro", "Madonna della Solitudine", "Redentore statue", "Buggerru", "Masua", "Fluminimaggiore"]
     activities: ["Trail running on Monte Ortobene"]
-    gpx:
-      - "./trail-running-on-monte-ortobene.gpx"
     notes: |
       I moved to Madonna della Solitudine church, where I parked near to the sports field.
       From there I had a trail running session up to Ortobene mount, reaching the
@@ -129,8 +114,6 @@ days:
     title: "Fluminimaggiore abandoned mines hike"
     places: ["Fluminimaggiore"]
     activities: ["Hiking to the abandoned mines at Fluminimaggiore"]
-    gpx:
-      - "./hiking-to-the-abandoned-mines-at-fluminimaggiore.gpx"
     notes: |
       A short hike near Fluminimaggiore, through the area's abandoned mines — an
       interesting change of pace after a few demanding hiking days, with old mining
@@ -140,8 +123,6 @@ days:
     title: "Malacalzetta hike"
     places: ["San Benedetto", "Mamenga", "Malacalzetta", "Fluminimaggiore"]
     activities: ["Hiking to Malacalzetta"]
-    gpx:
-      - "./hiking-to-malacalzetta.gpx"
     notes: |
       Drove to San Benedetto. The Mamenga camping spot turned out to be abandoned and
       not suitable to stop at, so I parked near the sports field instead. From there I
@@ -152,8 +133,6 @@ days:
     title: "Capo Pecora hike"
     places: ["Portixeddu", "Capo Pecora"]
     activities: ["Hiking to Punta de Su Guardianu"]
-    gpx:
-      - "./hiking-to-punta-de-su-guardianu.gpx"
     notes: |
       Drove to Capo Pecora — an excellent spot for the night, although without water
       (there's none at Portixeddu either, along the road to Capo Pecora). Hiked up to
@@ -164,8 +143,6 @@ days:
     title: "Piscinas coastal hike"
     places: ["Piscinas"]
     activities: ["Hike from Capo Pecora to Piscinas beach"]
-    gpx:
-      - "./hike-from-capo-pecora-to-piscinas-beach.gpx"
     notes: |
       A coastal hike leading to Piscinas beach, known for its dune system — a welcome
       change of scenery after the inland mountain trails of the previous days. Another
@@ -176,8 +153,6 @@ days:
     title: "Capo Pecora trail run and drive to Aritzo"
     places: ["Capo Pecora", "Guspini", "Aritzo"]
     activities: ["Trail running at Capo Pecora", "Grocery shopping in Guspini"]
-    gpx:
-      - "./trail-running-at-capo-pecora.gpx"
     notes: |
       Trail run at Capo Pecora along the already walked easy paths in the morning. After
       one last swim, I did some grocery shopping in Guspini while driving towards Aritzo,
@@ -188,8 +163,6 @@ days:
     title: "Aritzo mountains hike"
     places: ["Aritzo"]
     activities: ["Hiking to Monte Orrubiu above Aritzo"]
-    gpx:
-      - "./hiking-to-monte-orrubiu-above-aritzo.gpx"
     notes: |
       Hiked in Monte Orrubiu above Aritzo, disturbed along the way by a few sheepdogs.
       Spotted an excellent camping spot near a small church on the hills. Many sheepfolds
@@ -201,8 +174,6 @@ days:
     title: "Punta Poloche and Gorropu"
     places: ["Genna Silana", "Punta Poloche", "Gorropu", "Marina di Orosei"]
     activities: ["Hiking to Punta Poloche", "Viewing Gorropu canyon"]
-    gpx:
-      - "./hiking-to-punta-poloche.gpx"
     notes: |
       Drove to Genna Silana, leaving before dawn, to start hiking to Punta Poloche at sunrise.
       The path is rough and little-traveled, mostly following goat trails. I descended
@@ -213,8 +184,6 @@ days:
     title: "Marina di Orosei and Cala Liberotto"
     places: ["Marina di Orosei", "Cala Liberotto", "Olbia"]
     activities: ["Running at Marina di Orosei", "Beach afternoon"]
-    gpx:
-      - "./running-at-marina-di-orosei.gpx"
     notes: |
       Went for a run along the coast at Marina di Orosei, through the pine forest.
       Drove to Cala Liberotto for lunch and spent the afternoon at the beach, then

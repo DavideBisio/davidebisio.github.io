@@ -13,8 +13,8 @@ src/
     trips/
       <trip-slug>/
         <trip-slug>.md     # one file for the whole trip: overview + all days
-        *.gpx               # GPX tracks, colocated flat, referenced by filename
-        *.jpg / *.png        # pictures, colocated flat, referenced by filename
+        gpx/                # GPX tracks, auto-matched to a day (see "Adding a trip")
+        jpg/                # pictures, auto-matched to a day by EXIF date taken
   content.config.ts  # collection schemas: articles, trips
   data/cv.ts         # CV content: profile, experience, education, skills tree
   lib/                # articleSlug/tripSlug helpers, build-time GPX parsing
@@ -73,14 +73,18 @@ tags: ["optional", "tags"]
 ## Adding a trip
 
 Create a folder under `src/content/trips/<trip-slug>/` with one comprehensive
-markdown file for the whole trip, plus any GPX tracks and pictures colocated
-flat alongside it:
+markdown file for the whole trip, plus `gpx/` and `jpg/` subfolders for
+tracks and pictures. Nothing in `gpx/` or `jpg/` is referenced from the
+markdown — both are scanned and matched to a day automatically at build time:
 
 ```text
 src/content/trips/<trip-slug>/
   <trip-slug>.md
-  2026-06-07-some-ride.gpx   # optional
-  some-photo.jpg              # optional
+  gpx/
+    <trip-slug>-route.gpx    # optional: combined driving routes + waypoints
+    some-hike.gpx             # optional: one file per day's activity
+  jpg/
+    some-photo.jpg             # optional
 ```
 
 `<trip-slug>.md` frontmatter — trip metadata plus a `days` array (each day is
@@ -102,25 +106,38 @@ days:
     activities: ["Hike", "Ride"] # optional
     notes: |
       Free-form prose for the day. Blank lines start a new paragraph.
-    images:
-      - "./some-photo.jpg" # optional, filename relative to this file
-    gpx:
-      - "./2026-06-07-some-ride.gpx" # optional, filenames relative to this file
 ---
 
 Trip-level intro/overview markdown goes in the file body, same as an article.
 ```
 
-When a day has `gpx`, its timeline entry parses the track(s) at build time (no
-parser shipped to the client) and renders a Leaflet map, distance/elevation/
-duration stats, and a download link. When a day has `images`, small thumbnails
-are shown inline and clicking one opens it full-size in a lightbox. Both are
-optional per day and simply omitted when not set.
+### How `gpx/` and `jpg/` are matched to a day
+
+- **`gpx/<trip-slug>-route.gpx`** (filename ending in `-route.gpx`) is treated
+  as one combined file holding every day's driving route as a separately
+  named `<trk>` (`"Route DD/MM/YYYY"`) plus a shared set of `<wpt>`
+  waypoints, for the trip-level journey map. There's at most one of these.
+- **Every other file in `gpx/`** is a single day's activity track (a hike,
+  run, etc.), matched to its day by the date on its own GPX points — not by
+  filename — so it can be named anything. A day with no matching file simply
+  has no activity track; a day can have more than one.
+- **Every file in `jpg/`** is matched to a day by its EXIF "date taken"
+  (`DateTimeOriginal`/`CreateDate`), not the file's modify date — which for
+  Lightroom-exported files reflects export time, not capture time. A photo
+  with neither tag is skipped with a build warning.
+
+When a day has a matching track, its timeline entry parses it at build time
+(no parser shipped to the client) and renders a Leaflet map,
+distance/elevation/duration stats, a "Download activity GPX" link, and — if
+the combined route file has an entry for that day — a "Download route GPX"
+link. When a day has matching photos, small thumbnails are shown inline and
+clicking one opens it full-size in a lightbox.
 
 ### Importing GPX tracks from Garmin Connect
 
 Export each day's activity from Garmin Connect (default filename
-`activity_<id>.gpx`) and drop the raw files into the trip's folder, then run:
+`activity_<id>.gpx`) and drop the raw files into the trip's folder (next to
+`<trip-slug>.md`, not inside `gpx/`), then run:
 
 ```bash
 npm run import-gpx -- <trip-slug>
@@ -132,14 +149,16 @@ For each raw file, `scripts/import-gpx-tracks.mjs`:
   by date against that day's `date` in the trip's frontmatter.
 - Picks the matching entry from that day's `activities` — when a day lists
   more activities than it has GPX files, it prefers whichever activity text
-  reads as a tracked activity (hike/run/ride/walk/ski/swim/...).
+  reads as a tracked activity (hike/run/ride/walk/ski/swim/...) — purely to
+  name the output file; the day match itself is always by date.
 - Renames the file in kebab case after that activity text and sets
   `<trk><name>` to the same text.
 - Strips Garmin-specific extras — heart rate, cadence, the Connect link,
   `<desc>`/`<type>` — down to a plain GPX 1.1 file with only position,
   elevation, and time.
-- Adds (or replaces a stale) `gpx:` entry for that day in the trip's
-  markdown, then deletes the raw file.
+- Writes the cleaned file into `gpx/` and deletes the raw file. No frontmatter
+  edit is needed — the site matches it back to the same day by date at build
+  time.
 
 It refuses to guess and exits with an error, before touching any file, when a
 day has more GPX files than activities, no activities at all, or an ambiguous

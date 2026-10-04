@@ -15,8 +15,10 @@ const articles = defineCollection({
 });
 
 // One comprehensive file per trip: `<slug>/<slug>.md`, with all days as a
-// frontmatter array. GPX tracks and pictures are colocated flat in the same
-// folder and referenced by filename.
+// frontmatter array. GPX tracks live under `<slug>/gpx/` and pictures under
+// `<slug>/jpg/`, both auto-discovered and matched to a day at build time
+// (see src/pages/travel/[trip]/index.astro) — no per-day filename lists in
+// this frontmatter.
 const trips = defineCollection({
   loader: glob({ pattern: '*/*.{md,mdx}', base: './src/content/trips' }),
   schema: ({ image }) =>
@@ -30,10 +32,6 @@ const trips = defineCollection({
       coverImage: image().optional(),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
-      // Optional single GPX file (relative to the trip folder) holding every day's
-      // driving route as a separately-named <trk> ("Route DD/MM/YYYY") plus a shared
-      // set of <wpt> waypoints, for the trip-level journey map.
-      routesGpx: z.string().optional(),
       days: z
         .array(
           z.object({
@@ -42,9 +40,6 @@ const trips = defineCollection({
             places: z.array(z.string()).default([]),
             activities: z.array(z.string()).default([]),
             notes: z.string().optional(),
-            images: z.array(image()).default([]),
-            // Filenames of colocated .gpx files (relative to the trip folder), e.g. ["./ride.gpx"].
-            gpx: z.array(z.string()).default([]),
           }),
         )
         .default([]),
