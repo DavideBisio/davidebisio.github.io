@@ -1,20 +1,78 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Theme is set via <html data-theme="light|dark"> (see Layout.astro + ThemeToggle). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Palette */
+  --color-slate-base: #1e232a;
+  --color-crimson: #c84b42;
+  --color-amber: #f9a23e;
+  --color-offwhite: #f2ede4;
+  --color-teal: #4c908f;
+
+  /* Derived dark surfaces */
+  --color-dark-card: #282e37;
+  --color-dark-code: #15181e;
 }
 
-html {
-  color-scheme: light dark;
+:root {
+  color-scheme: light;
+
+  /* Light: slate/sky utilities mapped onto the palette */
+  --color-sky-200: #f9a23e;
+  --color-sky-400: #c84b42;
+  --color-sky-600: #c84b42;
+  --color-sky-700: #f9a23e;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-slate-100: #282e37;
+  --color-slate-200: #4c908f;
+  --color-slate-300: #f2ede4;
+  --color-slate-400: #4c908f;
+  --color-slate-500: #4c908f;
+  --color-slate-600: #4c908f;
+  --color-slate-700: #f2ede4;
+  --color-slate-800: #282e37;
+  --color-slate-900: #282e37;
+  --color-slate-950: #1e232a;
+
+  /* Text accents are amber (crimson is too low-contrast on dark); fills are crimson. */
+  --color-sky-200: #f2ede4;
+  --color-sky-400: #f9a23e;
+  --color-sky-600: #c84b42;
+  --color-sky-700: #f9a23e;
+
+  --tw-prose-invert-body: #f2ede4;
+  --tw-prose-invert-headings: #f2ede4;
+  --tw-prose-invert-lead: #f2ede4;
+  --tw-prose-invert-links: #f9a23e;
+  --tw-prose-invert-bold: #f2ede4;
+  --tw-prose-invert-counters: #4c908f;
+  --tw-prose-invert-bullets: #4c908f;
+  --tw-prose-invert-hr: #4c908f;
+  --tw-prose-invert-quotes: #f2ede4;
+  --tw-prose-invert-quote-borders: #4c908f;
+  --tw-prose-invert-captions: #4c908f;
+  --tw-prose-invert-code: #f2ede4;
+  --tw-prose-invert-pre-code: #f2ede4;
+  --tw-prose-invert-pre-bg: #15181e;
+  --tw-prose-invert-th-borders: #4c908f;
+  --tw-prose-invert-td-borders: #4c908f;
 }
 
 body {
-  @apply bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-offwhite text-slate-base dark:bg-slate-base dark:text-offwhite;
 }
 
 ::selection {
-  @apply bg-sky-200 text-slate-900;
+  @apply bg-amber text-slate-base;
 }
 
 /* Gives the journey map's tiles a coarser, lower-contrast look than the

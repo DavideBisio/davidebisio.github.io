@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { SkillNode } from '../data/cv';
 
 const levelColor: Record<string, string> = {
-  expert: 'bg-sky-600',
-  proficient: 'bg-sky-400',
-  familiar: 'bg-sky-200',
+  expert: 'bg-amber',
+  proficient: 'bg-teal',
+  familiar: 'bg-offwhite/40',
 };
 
 function Node({ node, depth = 0 }: { node: SkillNode; depth?: number }) {
@@ -36,7 +36,7 @@ function Node({ node, depth = 0 }: { node: SkillNode; depth?: number }) {
         )}
       </div>
       {hasChildren && open && (
-        <ul className="ml-5 border-l border-slate-200 pl-4 dark:border-slate-800">
+        <ul className="ml-5 border-l border-slate-200 pl-4 dark:border-teal">
           {node.children!.map((child) => (
             <Node key={child.name} node={child} depth={depth + 1} />
           ))}
