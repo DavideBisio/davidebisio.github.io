@@ -1,20 +1,66 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Dark-only site: `dark:` variants always apply. */
+@custom-variant dark (&:where(*));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Palette */
+  --color-ink: #1f1a2d;
+  --color-ember: #e13e33;
+  --color-amber: #f9a23e;
+  --color-cream: #f6e6c1;
+  --color-teal: #4c908f;
+
+  /* Existing slate/sky utilities remapped onto the palette. Light-mode
+     utilities (no dark: pair) land on dark-friendly values too. */
+  --color-slate-100: #2b2540;
+  --color-slate-200: #3a3352;
+  --color-slate-300: #3a3352;
+  --color-slate-400: #b9ad93;
+  --color-slate-500: #b9ad93;
+  --color-slate-600: #b9ad93;
+  --color-slate-700: #e8d9b4;
+  --color-slate-800: #3a3352;
+  --color-slate-900: #2b2540;
+  --color-slate-950: #1f1a2d;
+  --color-sky-200: #f6e6c1;
+  --color-sky-400: #f9a23e;
+  --color-sky-600: #f9a23e;
+  --color-sky-700: #e13e33;
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-ink text-cream;
 }
 
 ::selection {
-  @apply bg-sky-200 text-slate-900;
+  @apply bg-amber text-ink;
+}
+
+.prose {
+  --tw-prose-invert-body: #e8d9b4;
+  --tw-prose-invert-headings: #f6e6c1;
+  --tw-prose-invert-lead: #e8d9b4;
+  --tw-prose-invert-links: #f9a23e;
+  --tw-prose-invert-bold: #f6e6c1;
+  --tw-prose-invert-counters: #4c908f;
+  --tw-prose-invert-bullets: #4c908f;
+  --tw-prose-invert-hr: #3a3352;
+  --tw-prose-invert-quotes: #f6e6c1;
+  --tw-prose-invert-quote-borders: #4c908f;
+  --tw-prose-invert-captions: #b9ad93;
+  --tw-prose-invert-code: #f6e6c1;
+  --tw-prose-invert-pre-code: #f6e6c1;
+  --tw-prose-invert-pre-bg: #17131f;
+  --tw-prose-invert-th-borders: #3a3352;
+  --tw-prose-invert-td-borders: #3a3352;
 }
 
 /* Gives the journey map's tiles a coarser, lower-contrast look than the

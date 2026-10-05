@@ -19,8 +19,8 @@ const COARSE_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const COARSE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 const TRACK_STYLE: Record<'activity' | 'route', { color: string; weight: number }> = {
-  activity: { color: '#ea580c', weight: 4 },
-  route: { color: '#0284c7', weight: 4 },
+  activity: { color: '#f9a23e', weight: 4 },
+  route: { color: '#4c908f', weight: 4 },
 };
 
 export default function JourneyMap({ day }: Props) {
@@ -51,8 +51,8 @@ export default function JourneyMap({ day }: Props) {
       for (const wpt of day.waypoints) {
         L.circleMarker([wpt.lat, wpt.lon], {
           radius: 5,
-          color: '#dc2626',
-          fillColor: '#dc2626',
+          color: '#e13e33',
+          fillColor: '#e13e33',
           fillOpacity: 1,
         })
           .addTo(map)

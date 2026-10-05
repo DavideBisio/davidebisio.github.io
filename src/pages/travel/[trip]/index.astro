@@ -150,7 +150,7 @@ const hasJourney = journeyDays.length > 0;
     </div>
   </header>
 
-  <div class="prose prose-slate max-w-none dark:prose-invert">
+  <div class="prose prose-invert max-w-none">
     <Content />
   </div>
 
@@ -186,7 +186,7 @@ const hasJourney = journeyDays.length > 0;
             )}
 
             {day.notes && (
-              <div class="prose prose-slate mt-4 max-w-none dark:prose-invert" set:html={renderNotesHtml(day.notes)} />
+              <div class="prose prose-invert mt-4 max-w-none" set:html={renderNotesHtml(day.notes)} />
             )}
 
             {photos.length > 0 && (

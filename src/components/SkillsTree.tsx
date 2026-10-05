@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { SkillNode } from '../data/cv';
 
 const levelColor: Record<string, string> = {
-  expert: 'bg-sky-600',
-  proficient: 'bg-sky-400',
-  familiar: 'bg-sky-200',
+  expert: 'bg-amber',
+  proficient: 'bg-teal',
+  familiar: 'bg-cream/40',
 };
 
 function Node({ node, depth = 0 }: { node: SkillNode; depth?: number }) {

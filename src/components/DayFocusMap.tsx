@@ -83,7 +83,7 @@ export default function DayFocusMap({ days, tripSlug }: Props) {
   // Same-height skeleton so the sticky column doesn't jump once data arrives;
   // no popup button yet either, since there's nothing to show in it.
   if (!journeyDays) {
-    return <div className="hidden h-80 w-full animate-pulse rounded-lg border border-slate-200 bg-slate-100 lg:block dark:border-slate-800 dark:bg-slate-800" />;
+    return <div className="hidden h-80 w-full animate-pulse rounded-lg border border-slate-200 bg-slate-100 lg:block dark:bg-slate-800" />;
   }
 
   const activeDay = resolveActiveDay(journeyDays, activeDayIndex);
@@ -107,7 +107,7 @@ export default function DayFocusMap({ days, tripSlug }: Props) {
         // Leaflet's own controls (zoom, attribution) default to z-index 1000,
         // which would otherwise cover this button whenever a per-day map's
         // bottom-right corner scrolls into the same screen position.
-        className="fixed bottom-6 right-6 z-[1100] flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-white shadow-lg lg:hidden"
+        className="fixed bottom-6 right-6 z-[1100] flex h-12 w-12 items-center justify-center rounded-full bg-amber text-ink shadow-lg lg:hidden"
         aria-label="Show day map"
       >
         🗺
