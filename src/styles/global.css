@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Dark-only site: `dark:` variants always apply. */
-@custom-variant dark (&:where(*));
-
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
@@ -14,36 +11,42 @@
   --color-cream: #f6e6c1;
   --color-teal: #4c908f;
 
-  /* Existing slate/sky utilities remapped onto the palette. Light-mode
-     utilities (no dark: pair) land on dark-friendly values too. */
-  --color-slate-100: #2b2540;
-  --color-slate-200: #3a3352;
-  --color-slate-300: #3a3352;
-  --color-slate-400: #b9ad93;
-  --color-slate-500: #b9ad93;
-  --color-slate-600: #b9ad93;
-  --color-slate-700: #e8d9b4;
-  --color-slate-800: #3a3352;
-  --color-slate-900: #2b2540;
-  --color-slate-950: #1f1a2d;
-  --color-sky-200: #f6e6c1;
-  --color-sky-400: #f9a23e;
-  --color-sky-600: #f9a23e;
-  --color-sky-700: #e13e33;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light dark;
+}
+
+/* Dark theme (follows the system setting): existing slate/sky utilities
+   are remapped onto the palette. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-slate-100: #2b2540;
+    --color-slate-200: #3a3352;
+    --color-slate-300: #3a3352;
+    --color-slate-400: #b9ad93;
+    --color-slate-500: #b9ad93;
+    --color-slate-600: #b9ad93;
+    --color-slate-700: #e8d9b4;
+    --color-slate-800: #3a3352;
+    --color-slate-900: #2b2540;
+    --color-slate-950: #1f1a2d;
+    --color-sky-200: #f6e6c1;
+    --color-sky-400: #f9a23e;
+    --color-sky-600: #f9a23e;
+    --color-sky-700: #e13e33;
+  }
 }
 
 body {
-  @apply bg-ink text-cream;
+  @apply bg-white text-slate-900 dark:bg-ink dark:text-cream;
 }
 
 ::selection {
-  @apply bg-amber text-ink;
+  @apply bg-sky-200 text-slate-900 dark:bg-amber dark:text-ink;
 }
 
+@media (prefers-color-scheme: dark) {
 .prose {
   --tw-prose-invert-body: #e8d9b4;
   --tw-prose-invert-headings: #f6e6c1;
@@ -61,6 +64,7 @@ body {
   --tw-prose-invert-pre-bg: #17131f;
   --tw-prose-invert-th-borders: #3a3352;
   --tw-prose-invert-td-borders: #3a3352;
+}
 }
 
 /* Gives the journey map's tiles a coarser, lower-contrast look than the
