@@ -83,7 +83,7 @@ export default function DayFocusMap({ days, tripSlug }: Props) {
   // Same-height skeleton so the sticky column doesn't jump once data arrives;
   // no popup button yet either, since there's nothing to show in it.
   if (!journeyDays) {
-    return <div className="hidden h-80 w-full animate-pulse rounded-lg border border-slate-200 bg-slate-100 lg:block dark:bg-slate-800" />;
+    return <div className="hidden h-80 w-full animate-pulse rounded-lg border border-slate-200 bg-slate-100 lg:block dark:bg-dark-card" />;
   }
 
   const activeDay = resolveActiveDay(journeyDays, activeDayIndex);
@@ -107,7 +107,7 @@ export default function DayFocusMap({ days, tripSlug }: Props) {
         // Leaflet's own controls (zoom, attribution) default to z-index 1000,
         // which would otherwise cover this button whenever a per-day map's
         // bottom-right corner scrolls into the same screen position.
-        className="fixed bottom-6 right-6 z-[1100] flex h-12 w-12 items-center justify-center rounded-full bg-amber text-ink shadow-lg lg:hidden"
+        className="fixed bottom-6 right-6 z-[1100] flex h-12 w-12 items-center justify-center rounded-full bg-sky-600 text-offwhite shadow-lg lg:hidden"
         aria-label="Show day map"
       >
         🗺
@@ -122,7 +122,7 @@ export default function DayFocusMap({ days, tripSlug }: Props) {
           onClick={closePopup}
         >
           <div
-            className="w-full max-w-sm rounded-lg bg-white p-4 dark:bg-slate-900"
+            className="w-full max-w-sm rounded-lg bg-white p-4 dark:bg-dark-card"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-2 flex items-center justify-between">

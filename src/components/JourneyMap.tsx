@@ -51,8 +51,8 @@ export default function JourneyMap({ day }: Props) {
       for (const wpt of day.waypoints) {
         L.circleMarker([wpt.lat, wpt.lon], {
           radius: 5,
-          color: '#e13e33',
-          fillColor: '#e13e33',
+          color: '#c84b42',
+          fillColor: '#c84b42',
           fillOpacity: 1,
         })
           .addTo(map)
@@ -77,7 +77,7 @@ export default function JourneyMap({ day }: Props) {
     <div>
       <div
         ref={containerRef}
-        className="journey-map-tiles h-80 w-full rounded-lg border border-slate-200 dark:border-slate-800"
+        className="journey-map-tiles h-80 w-full rounded-lg border border-slate-200 dark:border-teal"
       />
       <div className="mt-2 text-sm font-medium">{day.label}</div>
     </div>
