@@ -39,6 +39,7 @@ const pageTitle = title === 'Davide Bisio' ? title : `${title} · Davide Bisio`;
     <meta name="twitter:description" content={description} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <title>{pageTitle}</title>
+    <script data-goatcounter="https://davidebisio.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
     {structuredData && <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />}
   </head>
   <body class="flex min-h-screen flex-col">
