@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Web3Forms access keys are public by design: they only allow submitting to this form.
+const accessKey = '2c038af9-6a86-4dd7-86c7-6d549521cc75';
+const inputClass =
+  'w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm dark:border-slate-700';
+---
+
+<Layout title="Contact" description="Get in touch with Davide Bisio.">
+  <h1 class="mb-6 text-2xl font-bold tracking-tight">Contact</h1>
+
+  <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="space-y-4">
+    <input type="hidden" name="access_key" value={accessKey} />
+    <input type="hidden" name="subject" value="New message from davidebisio.github.io" />
+    <input type="checkbox" name="botcheck" class="hidden" tabindex="-1" autocomplete="off" />
+
+    <div>
+      <label for="name" class="mb-1 block text-sm font-medium">Name</label>
+      <input id="name" name="name" required class={inputClass} />
+    </div>
+    <div>
+      <label for="email" class="mb-1 block text-sm font-medium">Email</label>
+      <input id="email" name="email" type="email" required class={inputClass} />
+    </div>
+    <div>
+      <label for="message" class="mb-1 block text-sm font-medium">Message</label>
+      <textarea id="message" name="message" rows="6" required class={inputClass}></textarea>
+    </div>
+
+    <button
+      type="submit"
+      class="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700"
+    >
+      Send
+    </button>
+    <p id="form-status" role="status" class="text-sm text-slate-600 dark:text-slate-400"></p>
+  </form>
+</Layout>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const status = document.getElementById('form-status') as HTMLElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    status.textContent = 'Sending…';
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new FormData(form),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      form.reset();
+      status.textContent = 'Thanks, your message was sent.';
+    } catch {
+      status.textContent = 'Something went wrong. Please try again later.';
+    }
+  });
+</script>
