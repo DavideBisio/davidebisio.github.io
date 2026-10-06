@@ -60,8 +60,13 @@ TODO: describe exactly how I use each of these.
 
 Other options: **GPXSee** (viewer only, lightweight) and **gpx.studio** (browser-based GPX editing and elevation replacement).
 
-Note on OpenMTBMap: the maps are also distributed as a `gmapsupp.img` file that can be copied straight to the device's `Garmin` folder, so Basecamp is a convenience for installing and browsing the maps on the computer rather than a hard requirement.
-TODO: verify this against the current OpenMTBMap instructions before publishing.
+Note on OpenMTBMap: Basecamp is not strictly required to get the maps onto a device. OpenMTBMap also offers a prebuilt `gmapsupp.img` ("Premium Gmapsupp.img", for direct use on Garmin units) that you copy into the device's `Garmin` folder (some models want a `Map` folder instead). The trade-offs, per the OpenMTBMap tutorials:
+
+- Sending maps through Basecamp (or MapSource) is the way to get address search on the device.
+- On newer devices it is better to send each map separately and rename the `gmapsupp.img`, because maps sent together through Basecamp cannot be individually deactivated.
+- Most new Garmin devices cannot read the Unicode map variants, so use the non-Unicode ones.
+
+TODO: check which of these applies to my Edge model.
 
 ### 4. Google Earth: 3D terrain overview
 
