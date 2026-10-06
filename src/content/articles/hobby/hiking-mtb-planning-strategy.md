@@ -7,7 +7,13 @@ tags: ["hiking", "mtb", "route-planning", "gps"]
 draft: true
 ---
 
-Draft. TODO intro: why planning matters, what kind of trips this workflow is for (multi-day hiking, bikepacking, day MTB rides).
+A good route is rarely found in one place. The track that looks perfect on a map can turn out to be a washed-out path, a closed gate, or a climb with no water for 30 km. Over time I've settled on a chain of tools where each one does the job it's best at, and the output of one feeds the next.
+
+This is the workflow I use for multi-day hikes and for mountain bike rides. The tools are the same for both, but what I look for is different. For hiking I care most about water, camp spots and exposure. For MTB I care about surface, technical sections and whether the trail is actually rideable.
+
+This isn't the only way to do it, and it keeps changing. Below: the tools, what I use each one for, how they fit together, and the checks I run before leaving.
+
+TODO: add a short personal hook (a trip where planning saved or failed me).
 
 ## The flow at a glance
 
@@ -88,16 +94,17 @@ TODO: check which of these applies to my Edge model.
 
 ## Putting it together
 
-TODO: describe the workflow end to end: order of the steps, which file moves where, GPX formats.
+Here is the order I follow, with what each step produces and where the file goes next.
 
-A possible order:
+1. **Collect ideas and a baseline.** Search Google, Wikiloc and Komoot for existing routes in the area. Look at the Strava heatmap or Trailforks to see where people actually go. Output: a rough corridor and a few reference tracks. Nothing is final yet.
+2. **Route the real line in CalTopo.** Draw the track with CalTopo's routing, using the baseline as a guide. Along the way, mark water sources, escape routes towards roads or villages, and candidate camp spots as waypoints. This map becomes the master, and every later change goes back into it.
+3. **Export the GPX and process it in Basecamp.** Open the exported GPX, fix the elevation profile, and use Basecamp's OSM routing to double-check or patch sections, for example road links or car access to the trailhead. If I need new OpenMTBMap maps on the Edge, I install or update them here.
+4. **Validate the terrain in Google Earth.** Load the GPX and fly the route in 3D. Look for rough or exposed sections, how steep the climbs really are, and whether the camp candidates look flat and sheltered. Add or move waypoints, and carry any change back into the CalTopo master.
+5. **Run the checklist.** Conditions, legality, stage numbers, camps, resupply and escape routes (see below). If something fails, go back to step 2 and re-route.
+6. **Export and load the devices.** Send the final GPX to the Garmin (watch or Edge) for the track overlay and live tracking, and to Mapy.cz on the phone with the offline map downloaded. The Garmin is primary and Mapy.cz is the backup.
+7. **Field-test the files before leaving.** Open the track on each device and check the overlay, the waypoints and the offline maps.
 
-1. Collect ideas and baseline tracks (Google, Wikiloc, Komoot, heatmaps).
-2. Route the real line in CalTopo. Add water, escape points and camp candidates as waypoints.
-3. Export the GPX, then fix the elevation profile and check the routing in Basecamp.
-4. Check the hard sections and camp spots in Google Earth. Add waypoints.
-5. Run the validation checklist below.
-6. Load the track on the Garmin and on Mapy.cz. Update the Edge maps if needed.
+Two habits keep this from getting messy. First, always edit the master in CalTopo and re-export, instead of patching a copy that has already been through two other tools. Second, name the waypoints clearly (water, escape, camp A, camp B) so they stay readable on a small watch screen.
 
 ## Validation and logistics checklist
 
