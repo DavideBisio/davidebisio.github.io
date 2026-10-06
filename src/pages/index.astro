@@ -19,13 +19,37 @@ const structuredData = {
 };
 ---
 
-<Layout title={profile.name} description={profile.summary} structuredData={structuredData}>
+<Layout title={profile.name} description="Digital verification by the day, geek by the night and outdoor enthusiast in every other moment." structuredData={structuredData}>
   <section class="mb-16">
     <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{profile.name}</h1>
     <p class="mt-2 text-lg text-slate-600 dark:text-slate-400">{profile.title}</p>
-    <p class="mt-6 max-w-2xl leading-relaxed text-slate-700 dark:text-slate-300">
-      {profile.summary}
-    </p>
+    <div class="mt-6 max-w-2xl space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Who am I</h2>
+        <p class="mt-1">
+          Digital verification by the day, geek by the night and outdoor enthusiast in every other moment of my
+          life. I love creating things and achieving goals.
+        </p>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Purpose of this site</h2>
+        <p class="mt-1">
+          Thinking about topics while writing down text, experimenting with AI, and creating some valuable content.
+        </p>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">How I use AI</h2>
+        <p class="mt-1">
+          AI is an awesome tool. I don't create <em>with</em> AI: the ideas are mine, AI makes them better. I also
+          use it to learn about AI and much more. I can't spend days on every single aspect, so I delegate the
+          non-creative work to AI.
+        </p>
+      </div>
+      <p>
+        Enjoy, and <a href="/contact/" class="font-medium text-sky-600 dark:text-sky-400">contact me</a> if you
+        like.
+      </p>
+    </div>
     <div class="mt-6 flex gap-4">
       <a
         href="/cv/"
