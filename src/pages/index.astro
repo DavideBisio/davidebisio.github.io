@@ -19,13 +19,37 @@ const structuredData = {
 };
 ---
 
-<Layout title={profile.name} description={profile.summary} structuredData={structuredData}>
+<Layout title={profile.name} description="Digital verification by day, geek by night, outdoors the rest of the time. Writing, experimenting with AI and building things." structuredData={structuredData}>
   <section class="mb-16">
     <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{profile.name}</h1>
     <p class="mt-2 text-lg text-slate-600 dark:text-slate-400">{profile.title}</p>
-    <p class="mt-6 max-w-2xl leading-relaxed text-slate-700 dark:text-slate-300">
-      {profile.summary}
-    </p>
+    <div class="mt-6 max-w-2xl space-y-6 leading-relaxed text-slate-700 dark:text-slate-300">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Who am I</h2>
+        <p class="mt-1">
+          By day, I work in digital verification. By night, I'm a geek. The rest of the time, you'll find me
+          outdoors. What ties it all together is that I love building things and seeing goals through.
+        </p>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Why this site</h2>
+        <p class="mt-1">
+          This is where I think out loud: writing is how I work through a topic. Here I experiment with AI and
+          share whatever turns out to be worth sharing.
+        </p>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">How I use AI</h2>
+        <p class="mt-1">
+          AI is a remarkable tool, but it doesn't do the creating for me. The ideas are mine; AI sharpens them. I
+          also use it to learn about AI itself and plenty else. I can't spend days digging into every detail, so I
+          hand the non-creative groundwork to AI and keep my time for the thinking.
+        </p>
+      </div>
+      <p>
+        Enjoy, and if something resonates, <a href="/contact/" class="font-medium text-sky-600 dark:text-sky-400">get in touch</a>.
+      </p>
+    </div>
     <div class="mt-6 flex gap-4">
       <a
         href="/cv/"
