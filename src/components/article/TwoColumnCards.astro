@@ -1,0 +1,65 @@
+---
+import { formatInline } from './inlineFormat';
+
+interface Item {
+  title: string;
+  body: string;
+  issueNumber?: number;
+  issueUrl?: string;
+}
+
+interface Column {
+  label: string;
+  color: 'crimson' | 'teal';
+  icon: string;
+  items: Item[];
+}
+
+interface Props {
+  left: Column;
+  right: Column;
+}
+
+const { left, right } = Astro.props as Props;
+
+const colorClasses = {
+  crimson: { text: 'text-crimson', bg: 'bg-crimson/15', border: 'border-crimson' },
+  teal: { text: 'text-teal', bg: 'bg-teal/15', border: 'border-teal' },
+};
+---
+
+<div class="not-prose my-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+  {
+    [left, right].map((column) => {
+      const c = colorClasses[column.color];
+      return (
+        <div>
+          <div class:list={['mb-2 flex items-center gap-2 text-sm font-semibold', c.text]}>
+            <span class:list={['flex h-5 w-5 items-center justify-center rounded-full text-xs', c.bg]}>
+              {column.icon}
+            </span>
+            {column.label}
+          </div>
+          <div class="space-y-3">
+            {column.items.map((item) => (
+              <div class:list={['rounded-lg border-l-4 bg-white dark:bg-dark-card p-4 shadow-sm', c.border]}>
+                <div class="font-semibold">
+                  {item.title}{' '}
+                  {item.issueNumber && item.issueUrl && (
+                    <a href={item.issueUrl} class="font-normal text-crimson dark:text-amber">
+                      #{item.issueNumber}
+                    </a>
+                  )}
+                </div>
+                <p
+                  class="mt-1 text-sm text-slate-base/70 dark:text-offwhite/70"
+                  set:html={formatInline(item.body)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    })
+  }
+</div>
