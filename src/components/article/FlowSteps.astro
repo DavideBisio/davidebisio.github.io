@@ -1,0 +1,47 @@
+---
+import { formatInline } from './inlineFormat';
+
+interface Step {
+  label: string;
+  code: string;
+  body: string;
+}
+
+interface Props {
+  caption?: string;
+  steps: Step[];
+}
+
+const { caption, steps } = Astro.props as Props;
+---
+
+<div class="not-prose my-6">
+  {caption && (
+    <p class="mb-3 text-sm text-slate-base/60 dark:text-offwhite/60" set:html={formatInline(caption)} />
+  )}
+  <div class="flex flex-col sm:flex-row items-stretch gap-2">
+    {
+      steps.map((step, i) => (
+        <>
+          <div class="flex-1 rounded-lg border border-slate-base/10 dark:border-offwhite/10 bg-white dark:bg-dark-card p-4">
+            <div class="text-xs font-semibold text-crimson dark:text-amber">
+              {i + 1} &middot; {step.label}
+            </div>
+            <div class="mt-1 font-mono text-sm">
+              <code>{step.code}</code>
+            </div>
+            <p class="mt-1 text-sm text-slate-base/70 dark:text-offwhite/70" set:html={formatInline(step.body)} />
+          </div>
+          {i < steps.length - 1 && (
+            <div
+              class="flex items-center justify-center text-xl text-slate-base/40 dark:text-offwhite/40 rotate-90 sm:rotate-0"
+              aria-hidden="true"
+            >
+              &rarr;
+            </div>
+          )}
+        </>
+      ))
+    }
+  </div>
+</div>

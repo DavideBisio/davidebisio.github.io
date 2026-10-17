@@ -1,0 +1,18 @@
+---
+import TreeList, { type TreeNode } from './TreeList.astro';
+
+interface Props {
+  root: string;
+  rootNote?: string;
+  nodes: TreeNode[];
+}
+
+const { root, rootNote, nodes } = Astro.props as Props;
+---
+
+<div class="not-prose my-6 overflow-x-auto rounded-lg border border-slate-base/10 dark:border-offwhite/10 bg-white dark:bg-dark-card p-5 font-mono text-sm leading-relaxed">
+  <div class="font-semibold">
+    {root} {rootNote && <span class="font-sans text-xs text-slate-base/50 dark:text-offwhite/50">{rootNote}</span>}
+  </div>
+  <TreeList nodes={nodes} />
+</div>

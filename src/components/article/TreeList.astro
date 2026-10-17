@@ -1,0 +1,27 @@
+---
+import { formatInline } from './inlineFormat';
+
+export interface TreeNode {
+  label: string;
+  note?: string;
+  children?: TreeNode[];
+}
+
+interface Props {
+  nodes: TreeNode[];
+}
+
+const { nodes } = Astro.props as Props;
+---
+
+<ul class="mt-1 mb-2 ml-1 list-none border-l border-slate-base/15 dark:border-offwhite/15 pl-4">
+  {
+    nodes.map((node) => (
+      <li>
+        <span set:html={formatInline(node.label)} />
+        {node.note && <span class="font-sans text-xs text-slate-base/50 dark:text-offwhite/50" set:html={` ${formatInline(node.note)}`} />}
+        {node.children && <Astro.self nodes={node.children} />}
+      </li>
+    ))
+  }
+</ul>

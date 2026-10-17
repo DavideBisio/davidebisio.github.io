@@ -1,0 +1,39 @@
+---
+import { formatInline } from './inlineFormat';
+
+interface Item {
+  title: string;
+  body: string;
+}
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+const lastSpansFull = items.length % 2 === 1;
+---
+
+<div class="not-prose my-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+  {
+    items.map((item, i) => (
+      <div
+        class:list={[
+          'rounded-lg border border-slate-base/10 dark:border-offwhite/10 bg-white dark:bg-dark-card p-4',
+          lastSpansFull && i === items.length - 1 && 'sm:col-span-2',
+        ]}
+      >
+        <div class="flex items-center gap-2">
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber/20 text-xs font-bold text-crimson dark:text-amber">
+            {i + 1}
+          </span>
+          <span class="font-semibold">{item.title}</span>
+        </div>
+        <p
+          class="mt-2 text-sm text-slate-base/70 dark:text-offwhite/70"
+          set:html={formatInline(item.body)}
+        />
+      </div>
+    ))
+  }
+</div>

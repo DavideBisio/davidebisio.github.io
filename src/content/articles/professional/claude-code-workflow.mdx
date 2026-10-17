@@ -1,0 +1,174 @@
+---
+title: "Building claude-code-workflow"
+description: "A Claude Code plugin that turns a repeatable dev process into four gated skills backed by swappable, mock-or-real MCP providers."
+pubDate: 2026-10-17
+category: professional
+tags: ["ai", "claude-code", "workflows"]
+---
+
+import CardGrid from '../../../components/article/CardGrid.astro';
+import TreeDiagram from '../../../components/article/TreeDiagram.astro';
+import FlowSteps from '../../../components/article/FlowSteps.astro';
+import TwoColumnCards from '../../../components/article/TwoColumnCards.astro';
+
+[`DavideBisio/claude-code-workflow`](https://github.com/DavideBisio/claude-code-workflow) is a Claude Code plugin marketplace. It bundles one plugin, `workflow`, which defines `git-dev`: a four-step dev process — target an issue, plan a test-first fix, execute it, update the tracker — implemented as gated Claude Code skills. Each skill reads and writes a committed `git-dev.data/` folder in the target project, asks for confirmation before acting, and stops rather than guesses when something's missing or conflicting.
+
+The trackers (version control, requirements) are MCP-shaped providers selected per project: a mock backend by default, or a real one that shells out to the `gh` CLI against an actual GitHub repo. Skills never hardcode which provider is active — they resolve it at runtime, so the same skill text drives a no-op mock run or a real PR/issue without changes.
+
+## Why I'm building this
+
+I work on AI workflow development, and this is an example project to try new things out in that space: gated multi-step skills, a provider abstraction that lets the same workflow run against sample data or a live repo, and an end-to-end harness that drives the skills through the real `claude` CLI instead of just unit-testing the Python underneath.
+
+## What I wish to do
+
+<CardGrid
+  items={[
+    { title: 'End-to-end companion', body: 'Walks a process end to end instead of answering one prompt at a time.' },
+    { title: 'Automate the repetitive parts', body: 'Branching, test-first fix, tracker updates — while keeping a human gate before anything real happens.' },
+    { title: 'Verifiable completion', body: 'State recorded in `git-dev.data/state.json`, not just assumed.' },
+    { title: 'Project-specific conventions', body: "Keeps the AI pointed at the project's own conventions (`project-prompt.md`) rather than generic behavior." },
+    { title: 'Swappable real backends', body: 'GitHub issues/PRs can be swapped in without touching the skills themselves.' },
+  ]}
+/>
+
+## What I did
+
+Built the `git-dev` workflow: four ordered skills (`target`, `plan`, `execute`, `update`) plus an orchestrator (`git-dev-run`) and three on-demand skills for creating issues, requirements, and test records. Backed it with two mock MCP servers (requirements tracker, version control) and two real ones that wrap the `gh` CLI, all behind the same provider contract (`list_*`, `get_*`, `create_*`/`update_*`). Wrote a generic e2e harness (`harness.py`) that builds a throwaway git fixture, drives each skill through `claude -p`, and checks both generic outcomes (did it error, did it touch git correctly) and workflow-specific goals. The whole thing was built in one day (27 commits), largely by using early versions of the workflow to build the later parts of itself.
+
+<TreeDiagram
+  root="workflow"
+  rootNote="(plugin)"
+  nodes={[
+    {
+      label: 'skills/',
+      children: [
+        { label: '`git-dev-run`', note: '— orchestrator' },
+        { label: '`git-dev-target`', note: '— step 1' },
+        { label: '`git-dev-plan`', note: '— step 2' },
+        { label: '`git-dev-execute`', note: '— step 3' },
+        { label: '`git-dev-update`', note: '— step 4' },
+        { label: '`git-dev-new-issue`, `git-dev-new-req`, `git-dev-new-test`', note: '— on demand' },
+      ],
+    },
+    {
+      label: 'mcp/',
+      children: [
+        { label: '`mock-version-control`, `mock-req-tracker`', note: '— default' },
+        { label: '`github-version-control`, `github-req-tracker`', note: '— real, via `gh`' },
+      ],
+    },
+    {
+      label: 'tests/',
+      children: [
+        { label: 'unit', note: '— mocks + `git_dev_data.py`' },
+        { label: 'e2e/', note: '— `harness.py` + `testplan.py`' },
+      ],
+    },
+  ]}
+/>
+
+<FlowSteps
+  caption="The orchestrator (`git-dev-run`) walks these four in order:"
+  steps={[
+    { label: 'TARGET', code: 'git-dev-target', body: 'pick the issue + requirements' },
+    { label: 'PLAN', code: 'git-dev-plan', body: 'test-first fix, commit, tracker updates' },
+    { label: 'EXECUTE', code: 'git-dev-execute', body: 'branch, failing test, fix, passing test' },
+    { label: 'UPDATE', code: 'git-dev-update', body: 'coverage update, MR, commit `git-dev.data`' },
+  ]}
+/>
+
+## Todo
+
+Real items from the open backlog, not a generic list — split into what's currently broken or missing, and what's a planned addition on top of a working base:
+
+<TwoColumnCards
+  left={{
+    label: 'Known gaps',
+    color: 'crimson',
+    icon: '!',
+    items: [
+      {
+        title: 'Stop committing regenerated tracker data',
+        issueNumber: 19,
+        issueUrl: 'https://github.com/DavideBisio/claude-code-workflow/issues/19',
+        body: '`git-dev.data/tracker/*.json` is a snapshot re-committed on every fetch — 8 of 28 commits so far are just that churn. Planned fix: a `handoff-manager.py` that scopes fetches to one issue at a time and keeps only validated, ephemeral handoff files.',
+      },
+      {
+        title: 'Tests and mocks still assume the old shape',
+        issueNumber: 20,
+        issueUrl: 'https://github.com/DavideBisio/claude-code-workflow/issues/20',
+        body: 'Unit tests, the e2e harness, and the mock providers all assume the committed-snapshot shape #19 is removing. Blocked until #19 lands.',
+      },
+      {
+        title: 'No reviewer / subagent layer yet',
+        issueNumber: 18,
+        issueUrl: 'https://github.com/DavideBisio/claude-code-workflow/issues/18',
+        body: "Still a frozen design doc, not code: subagents for `execute`'s test/fix/retry loop, or an independent reviewer before `update`. Leaning opt-in, never allowed to push or open a real PR/issue without a gate.",
+      },
+    ],
+  }}
+  right={{
+    label: 'Planned additions',
+    color: 'teal',
+    icon: '+',
+    items: [
+      {
+        title: 'Pluggable backends from outside the plugin',
+        issueNumber: 17,
+        issueUrl: 'https://github.com/DavideBisio/claude-code-workflow/issues/17',
+        body: "Today a tracker must live inside the plugin's own `mcp/` tree. Proposal: a `providers:` block in `config.yaml` so an external tracker (Jira, Linear, an internal system) wires in without forking.",
+      },
+      {
+        title: 'Do the prior-art comparison properly',
+        issueNumber: 21,
+        issueUrl: 'https://github.com/DavideBisio/claude-code-workflow/issues/21',
+        body: "Today's survey is shallow (repo search plus a few README skims). Follow-up: actually read the closest matches' code and harvest reusable ideas — gate design, guard hooks, reviewer independence, change-impact from a diff.",
+      },
+    ],
+  }}
+/>
+
+## How it stacks up against prior art
+
+[#21](https://github.com/DavideBisio/claude-code-workflow/issues/21) names the closest comparable projects: [workkit](https://github.com/itw-creative-works/workkit) and [claude-software-factory](https://github.com/genai-jerry/claude-software-factory) (GitHub issues/labels as the single source of truth, bot identity, guard hooks, staging branch), [reqtrace-mcp](https://github.com/b4ked/reqtrace-mcp) (requirement-to-code-to-test traceability, an independent read-only verifier, stale sign-offs, change-impact from a diff), and [plumbline](https://github.com/dr-zog/plumbline) (requirement-to-code links enforced at build time). That comparison is explicitly a to-do, not finished — this is a first read, not a verdict.
+
+<TwoColumnCards
+  left={{
+    label: 'Where prior art is already ahead',
+    color: 'crimson',
+    icon: '!',
+    items: [
+      {
+        title: 'No independent verifier yet',
+        body: "[reqtrace-mcp](https://github.com/b4ked/reqtrace-mcp) has a working independent verifier and stale-sign-off detection; this project's equivalent — a reviewer step before `update` — is still a design decision, not code ([#18](https://github.com/DavideBisio/claude-code-workflow/issues/18)).",
+      },
+      {
+        title: "Links aren't enforced",
+        body: '[plumbline](https://github.com/dr-zog/plumbline) enforces requirement-to-code links at build time; here the link is just metadata in a commit message and a coverage record, nothing fails if it is missing or wrong.',
+      },
+      {
+        title: 'Still a redundant local cache',
+        body: 'GitHub-issues-as-SSOT designs have no stale local cache to manage; this project still commits a redundant snapshot of the tracker on every run — exactly the churn [#19](https://github.com/DavideBisio/claude-code-workflow/issues/19) exists to remove.',
+      },
+    ],
+  }}
+  right={{
+    label: 'Where it differs so far',
+    color: 'teal',
+    icon: '+',
+    items: [
+      {
+        title: 'Swappable tracker provider',
+        body: 'Mock today, `gh`-CLI-backed GitHub next, and ([#17](https://github.com/DavideBisio/claude-code-workflow/issues/17)) any external system wired in via config. [workkit](https://github.com/itw-creative-works/workkit) and [claude-software-factory](https://github.com/genai-jerry/claude-software-factory), by contrast, treat GitHub issues/labels themselves as the one source of truth.',
+      },
+      {
+        title: 'Separate trackers, not one issue list',
+        body: 'Requirements, coverage, and version control are modeled as separate trackers (closer to an enterprise req-tracker shape, e.g. Jama) rather than collapsing everything into one issue tracker’s labels.',
+      },
+      {
+        title: 'A gate at every step',
+        body: 'Not just a few checkpoints — every step gates on explicit user confirmation before touching anything real.',
+      },
+    ],
+  }}
+/>
