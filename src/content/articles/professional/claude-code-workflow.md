@@ -36,18 +36,18 @@ Real items from the open backlog, not a generic list:
 - **Let the provider backends be pluggable from outside the plugin** ([#17](https://github.com/DavideBisio/claude-code-workflow/issues/17)): today a tracker must live inside the plugin's own `mcp/` tree; the proposal adds a `providers:` block in `config.yaml` so an external tracker (Jira, Linear, an internal system) can be wired in without forking.
 - **Do the prior-art comparison properly** ([#21](https://github.com/DavideBisio/claude-code-workflow/issues/21)): the README's current survey is shallow (repo search plus a few README skims). The follow-up is to actually read the closest matches' code and harvest reusable ideas — gate design, guard hooks, reviewer independence, change-impact from a diff.
 
-## Pros and cons, so far
+## How it stacks up against prior art
 
-**Pros**
+[#21](https://github.com/DavideBisio/claude-code-workflow/issues/21) names the closest comparable projects: [workkit](https://github.com/itw-creative-works/workkit) and [claude-software-factory](https://github.com/genai-jerry/claude-software-factory) (GitHub issues/labels as the single source of truth, bot identity, guard hooks, staging branch), [reqtrace-mcp](https://github.com/b4ked/reqtrace-mcp) (requirement-to-code-to-test traceability, an independent read-only verifier, stale sign-offs, change-impact from a diff), and [plumbline](https://github.com/dr-zog/plumbline) (requirement-to-code links enforced at build time). That comparison is explicitly a to-do, not finished — this is a first read, not a verdict.
 
-- Clean separation between process (skills), data access (providers), and state (`git-dev.data/`) — swapping mock for real GitHub only means changing `config.yaml`
-- Every step gates on user confirmation and refuses to push, stash, or guess at missing data — safe to point at a real repo
-- There's an actual e2e harness driving the real `claude` CLI, not just mocked unit tests of the Python helpers
-- Workflow state survives across sessions because `git-dev.data/` is committed, not scratch
+**Where it differs so far**
 
-**Cons**
+- The tracker is a swappable provider, not a fixed backend: mock today, `gh`-CLI-backed GitHub next, and ([#17](https://github.com/DavideBisio/claude-code-workflow/issues/17)) any external system wired in via config. workkit and claude-software-factory, by contrast, treat GitHub issues/labels themselves as the one source of truth.
+- Requirements, coverage, and version control are modeled as separate trackers (closer to an enterprise req-tracker shape, e.g. Jama) rather than collapsing everything into one issue tracker's labels.
+- Every step — not just a few checkpoints — gates on explicit user confirmation before touching anything real.
 
-- Only tested headlessly via the CLI harness — never yet run interactively inside Claude Code, so skill auto-invocation and the real UX are unverified
-- The `github-*` providers are the ones that take real actions (open issues/PRs) but have the thinnest test coverage — unit tests only, no e2e
-- Only one workflow (`git-dev`) exists, so whether the "gated skills + pluggable providers" pattern generalizes is still a one-example hypothesis
-- Some manual setup still required outside the tool (e.g. creating the `req`/`test`/`dev` GitHub labels by hand before the real provider works)
+**Where prior art is already ahead**
+
+- reqtrace-mcp has a working independent verifier and stale-sign-off detection; this project's equivalent — a reviewer step before `update` — is still a design decision, not code ([#18](https://github.com/DavideBisio/claude-code-workflow/issues/18)).
+- plumbline enforces requirement-to-code links at build time; here the link is just metadata in a commit message and a coverage record, nothing fails if it's missing or wrong.
+- GitHub-issues-as-SSOT designs don't have a stale local cache to manage; this project still commits a redundant snapshot of the tracker on every run, which is exactly the churn [#19](https://github.com/DavideBisio/claude-code-workflow/issues/19) exists to remove.
