@@ -28,10 +28,13 @@ Built the `git-dev` workflow: four ordered skills (`target`, `plan`, `execute`, 
 
 ## Todo
 
-- Load and drive the skills interactively inside Claude Code itself — so far they're only exercised headlessly through the CLI harness, which doesn't test skill auto-invocation
-- Tighten the MCP tool input schemas (currently `additionalProperties: true`)
-- Add e2e coverage for the `github-*` providers, not just the mock ones
-- Compare this gated-skill-plus-provider shape against other agentic dev-workflow tools
+Real items from the open backlog, not a generic list:
+
+- **Stop committing regenerated tracker data** ([#19](https://github.com/DavideBisio/claude-code-workflow/issues/19)): `git-dev.data/tracker/*.json` is just a snapshot of the real source of truth, yet it's read in full into the LLM's context and re-committed on every fetch — 8 of 28 commits so far are just that churn. Planned fix is a `handoff-manager.py` that scopes fetches to one issue at a time and keeps only validated, ephemeral handoff files.
+- **Update tests and mocks to match** ([#20](https://github.com/DavideBisio/claude-code-workflow/issues/20)), once #19 lands — unit tests, the e2e harness, and the mock providers all currently assume the committed-snapshot shape.
+- **Decide whether to add a subagent layer** ([#18](https://github.com/DavideBisio/claude-code-workflow/issues/18)): a frozen design doc weighing skills-only (today) against spawning subagents for the heaviest step (`execute`'s test/fix/retry loop) or an independent reviewer before `update`. Leaning toward adding agents selectively, opt-in, never allowed to push or open a real PR/issue without a gate.
+- **Let the provider backends be pluggable from outside the plugin** ([#17](https://github.com/DavideBisio/claude-code-workflow/issues/17)): today a tracker must live inside the plugin's own `mcp/` tree; the proposal adds a `providers:` block in `config.yaml` so an external tracker (Jira, Linear, an internal system) can be wired in without forking.
+- **Do the prior-art comparison properly** ([#21](https://github.com/DavideBisio/claude-code-workflow/issues/21)): the README's current survey is shallow (repo search plus a few README skims). The follow-up is to actually read the closest matches' code and harvest reusable ideas — gate design, guard hooks, reviewer independence, change-impact from a diff.
 
 ## Pros and cons, so far
 
